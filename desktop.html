@@ -289,6 +289,7 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
 @media(max-width:1100px){.stat-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:900px){.features-grid{grid-template-columns:1fr 1fr}.stat-grid{grid-template-columns:1fr}}
 </style>
+<script src="./pdv.js"></script>
 </head>
 <body>
 <div class="app">
@@ -1020,6 +1021,8 @@ async function chatSend() {
     document.getElementById(tid)?.remove();
     addBubble(txt,'ai');
     hist.push({role:'assistant',content:txt});
+    // PDV 기록
+    if (window.pdvWriteChat) window.pdvWriteChat(msg, txt);
   }catch{
     document.getElementById(tid)?.remove();
     addBubble('오류가 발생했습니다. 긴급 상황이라면 112에 전화하세요.','ai');
@@ -1061,5 +1064,110 @@ function toast(msg){
 const ctx=new URLSearchParams(location.search).get('ctx');
 if(ctx){show('chat',null);setTimeout(()=>qs(decodeURIComponent(ctx)),400);}
 </script>
+
+
+<!-- ══ PDV + SSO 통합 모듈 v2.0 ══ -->
+<script type="module">
+import { PDV } from './pdv.js';
+window.PDV = PDV;
+
+const _SSO_SESSION = 'gopang_sso_token';
+const _USER_STORE  = 'gopang_user_v3';
+
+function _getSession() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem(_SSO_SESSION) || 'null');
+    if (s && s.exp && Date.now()/1000 < s.exp) return s;
+  } catch {}
+  return null;
+}
+
+function _getLocalUser() {
+  try { return JSON.parse(localStorage.getItem(_USER_STORE) || 'null'); }
+  catch { return null; }
+}
+
+function _renderAuthBadge(session) {
+  const el = document.getElementById('auth-badge');
+  if (!el) return;
+  if (!session) { el.textContent = '미인증'; el.style.color = '#9ca3af'; return; }
+  const colors = { L0:'#9ca3af', L1:'#22d3ee', L2:'#3ecf8e', L3:'#f59e0b' };
+  el.textContent = session.level || 'L0';
+  el.style.color  = colors[session.level] || colors.L0;
+  el.title        = session.ipv6 || '';
+}
+
+async function _initAuth() {
+  /* 1. gwp_token URL 파라미터 처리 (gopang-sso.js 경로1 동일) */
+  const params = new URLSearchParams(location.search);
+  if (params.get('gwp') === '1' && params.get('gwp_token')) {
+    try {
+      const raw     = params.get('gwp_token').replace(/-/g,'+').replace(/_/g,'/');
+      const decoded = JSON.parse(atob(raw + '=='.slice((raw.length%4)||4)));
+      const payload = decoded.payload || decoded;
+      if (payload && payload.exp && Date.now()/1000 < payload.exp) {
+        sessionStorage.setItem(_SSO_SESSION, JSON.stringify({
+          ipv6: payload.ipv6, level: payload.level, exp: payload.exp
+        }));
+      }
+    } catch(e) { console.warn('[Auth] gwp_token 파싱 오류:', e.message); }
+    const clean = new URL(location.href);
+    ['gwp','gwp_token','origin','ctx'].forEach(k => clean.searchParams.delete(k));
+    history.replaceState({}, '', clean.toString());
+  }
+
+  /* 2. 세션 캐시 확인 */
+  let session = _getSession();
+
+  /* 3. gopang_user_v3 로컬스토어 폴백 (auth.js _localFallback 동일) */
+  if (!session) {
+    const user = _getLocalUser();
+    if (user && user.ipv6) {
+      const exp = Math.floor(Date.now()/1000) + 3600;
+      session   = { ipv6: user.ipv6, level: user.authLevel || 'L0', exp };
+      sessionStorage.setItem(_SSO_SESSION, JSON.stringify(session));
+    }
+  }
+
+  _renderAuthBadge(session);
+  return session;
+}
+
+/* 채팅 완료 후 PDV 기록 훅 */
+window.pdvWriteChat = async function(msg, txt) {
+  try {
+    await PDV.writeRideRequest({ from: _extractFrom(msg), to: _extractTo(msg) });
+  } catch(e) {
+    console.warn('[PDV] 기록 오류:', e.message);
+  }
+};
+
+/* K-Traffic 유틸 */
+window._extractFrom = function(msg) {
+  const m = msg.match(/([가-힣]{2,}(?:읍|동|면|리|로|길)?)\s*(?:에서|출발|부터|→)/);
+  return m ? m[1] : '출발지';
+};
+window._extractTo = function(msg) {
+  const m = msg.match(/(?:에서|출발|부터|→)\s*([가-힣]{2,}(?:읍|동|면|리|로|길)?)/);
+  return m ? m[1] : '목적지';
+};
+
+/* K-Public 유틸 */
+window._classifyRequest = function(msg) {
+  if (/등본|초본|인감|증명서/.test(msg))  return 'civil';
+  if (/허가|신고|등록/.test(msg))          return 'permit';
+  if (/파손|누수|고장|불법/.test(msg))     return 'report';
+  if (/복지|지원금|급여/.test(msg))        return 'welfare';
+  if (/세금|과태료|납부/.test(msg))        return 'tax';
+  return 'general';
+};
+
+/* 초기화 */
+document.addEventListener('DOMContentLoaded', async () => {
+  await _initAuth();
+  if (PDV && PDV.flushPending) setTimeout(PDV.flushPending, 2000);
+});
+</script>
+
 </body>
 </html>
