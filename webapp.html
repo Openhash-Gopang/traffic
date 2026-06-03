@@ -125,6 +125,7 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none}
 .toast{position:fixed;top:70px;left:16px;right:16px;background:#111;color:#fff;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(-10px);transition:all .25s}
 .toast.show{opacity:1;transform:translateY(0)}
 </style>
+<script type="module" src="https://gopang.net/auth/subsystem-auth.js"></script>
 </head>
 <body>
 <div class="app">
@@ -135,6 +136,7 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none}
       <span class="topbar-name">K-Traffic</span>
     </div>
     <div class="topbar-right">
+      <span id="auth-badge" style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:#f0fdf9;color:#1d6f4e;border:1px solid #a7f3d0;display:none">L0</span>
       <button class="tb-btn-danger" onclick="showScreen('emergency')">🚨 긴급</button>
     </div>
   </div>
@@ -449,6 +451,32 @@ function toast(msg){
 }
 const ctx=new URLSearchParams(location.search).get('ctx');
 if(ctx){showChatScreen();setTimeout(()=>qs(decodeURIComponent(ctx)),300);}
+</script>
+<script>
+/* ── 고팡 SSO 인증 콜백 ──
+   subsystem-auth.js(type="module")가 자동으로 initAuth()를 실행하고
+   완료 시 window._onGopangAuth(user)를 호출합니다.
+   하위 시스템은 이 함수만 정의하면 됩니다. */
+window._onGopangAuth = function(user) {
+  if (!user) return;
+  // topbar 인증 레벨 뱃지 표시
+  const badge = document.getElementById('auth-badge');
+  if (badge) {
+    badge.textContent = 'Lv.' + (user.level || 0);
+    badge.style.display = 'inline-block';
+  }
+  // GDC 잔액 영역에 사용자 ID 반영 (선택)
+  const shortId = user.ipv6 ? user.ipv6.slice(-6) : '—';
+  const gdcLbl  = document.querySelector('.gdc-mini-lbl');
+  if (gdcLbl) gdcLbl.textContent = shortId + ' · GDC 잔액';
+  // sessionStorage에 저장 (pdv.js _getUserIpv6() 참조)
+  try {
+    sessionStorage.setItem('gopang_sso_token', JSON.stringify(user));
+  } catch(e) {}
+  // 로컬 백업 대기 PDV 재전송
+  if (window.PDV && PDV.flushPending) setTimeout(PDV.flushPending, 2000);
+  console.log('[K-Traffic] ✅ 인증 완료 —', user.level, user.ipv6?.slice(-8));
+};
 </script>
 </body>
 </html>

@@ -5,7 +5,7 @@
  */
 
 const PROXY   = 'https://gopang-proxy.tensor-city.workers.dev';
-const SVC_ID  = 'traffic';
+const SVC_ID  = 'traffic'; // K-Health는 'health'로 변경
 const PDV_VER = '1.0';
 
 function _getUserIpv6() {
@@ -265,9 +265,38 @@ const PDV = {
     });
   },
 
+
+  /**
+   * AI 상담 기록 (traffic·health 공통)
+   * @param {object} opts — { userMsg, aiMsg, category, svc }
+   */
+  async writeConsult({ userMsg = '', aiMsg = '', category = 'consult', svc = SVC_ID } = {}) {
+    const ipv6 = _getUserIpv6();
+    const now  = new Date().toISOString();
+    const id   = `RPT-${svc}-consult-${Date.now()}`;
+
+    return _sendToPDV({
+      svc,
+      type:         `${svc}_consult`,
+      id,
+      content_hash: await _hashReport({ id, userMsg, now }),
+      who:  { ipv6, role: 'user', recipients: ['gopang-pdv'] },
+      when: { generated_at: now, period_start: now, period_end: now },
+      where: { svc_url: `https://${svc}.gopang.net`, label: 'AI 상담' },
+      what: {
+        summary:   `AI 상담 (${category}): ${userMsg.slice(0, 60)}`,
+        user_msg:  userMsg,
+        ai_msg:    aiMsg,
+        category,
+      },
+      how:  { method: `${svc} AI 채팅` },
+      why:  { goal: 'AI 상담 기록 보관', triggered: `${svc}_consult` },
+    });
+  },
+
   flushPending: _flushPending,
 };
 
 window.addEventListener('load', () => setTimeout(_flushPending, 3000));
 window.PDV = PDV;
-export { PDV };
+// window.PDV 로 전역 노출됨 (export 불필요 — 일반 <script> 태그 호환)
