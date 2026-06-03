@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K-Traffic — 국가 교통·물류 대시보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Inter',sans-serif;font-size:13px;line-height:1.5;color:#1a1a1a;background:#fff;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none}
+
+:root{
+  --green:#3ecf8e;
+  --green-dk:#2bb37a;
+  --green-bg:#f0fdf9;
+  --green-border:#a7f3d0;
+  --border:#e5e7eb;
+  --border2:#d1d5db;
+  --bg:#ffffff;
+  --bg2:#f9fafb;
+  --bg3:#f3f4f6;
+  --txt1:#1a1a1a;
+  --txt2:#6b7280;
+  --txt3:#9ca3af;
+  --sb-w:48px;
+  --sb-open:220px;
+  --red:#ef4444;
+  --red-bg:#fef2f2;
+  --amber:#f59e0b;
+  --amber-bg:#fffbeb;
+  --blue:#3b82f6;
+  --blue-bg:#eff6ff;
+  --purple:#8b5cf6;
+  --purple-bg:#f5f3ff;
+}
+
+/* ══ LAYOUT ══ */
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* ══ SIDEBAR ══ */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;z-index:200;
+  width:var(--sb-w);background:var(--bg);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+  transition:width .18s ease;
+}
+.sidebar:hover{width:var(--sb-open)}
+.sb-inner{width:var(--sb-open);flex:1;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.sb-inner::-webkit-scrollbar{display:none}
+
+.sb-top{height:48px;flex-shrink:0;display:flex;align-items:center;padding:0 12px;gap:10px;border-bottom:1px solid var(--border)}
+.sb-logo-icon{width:24px;height:24px;border-radius:5px;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-logo-icon svg{width:13px;height:13px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sb-logo-text{font-size:13px;font-weight:600;color:var(--txt1);white-space:nowrap;opacity:0;transition:opacity .12s}
+.sidebar:hover .sb-logo-text{opacity:1}
+
+.sb-section{padding:20px 0 4px 12px;font-size:11px;font-weight:600;color:var(--txt3);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;opacity:0;transition:opacity .12s;height:32px;display:flex;align-items:flex-end}
+.sidebar:hover .sb-section{opacity:1}
+
+.sb-item{
+  display:flex;align-items:center;height:34px;padding:0 10px;margin:1px 6px;
+  border-radius:6px;color:var(--txt2);cursor:pointer;white-space:nowrap;
+  transition:background .12s,color .12s;font-size:13px;font-weight:400;
+  position:relative;
+}
+.sb-item:hover{background:var(--bg3);color:var(--txt1)}
+.sb-item.active{background:var(--bg3);color:var(--txt1);font-weight:500}
+.sb-item.active::before{content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);width:2px;height:16px;background:var(--green);border-radius:0 2px 2px 0}
+.sb-icon{width:16px;height:16px;flex:0 0 16px;display:flex;align-items:center;justify-content:center;margin-right:0}
+.sb-icon svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sb-lbl{opacity:0;transition:opacity .12s;margin-left:10px;white-space:nowrap}
+.sidebar:hover .sb-lbl{opacity:1}
+
+.sb-dash-group{padding:6px 6px 6px;border-top:1px solid var(--border);margin-top:auto;flex-shrink:0;width:var(--sb-open)}
+.sb-dash-item{
+  display:flex;align-items:center;height:32px;padding:0 10px;margin:2px 0;
+  border-radius:6px;cursor:pointer;white-space:nowrap;font-size:12px;font-weight:500;
+  transition:background .12s;
+}
+.sb-dash-item.user{color:#1d6f4e;background:var(--green-bg)}
+.sb-dash-item.user:hover{background:#dcfce7}
+.sb-dash-item.national{color:#1d4ed8;background:var(--blue-bg);border:1px solid #bfdbfe}
+.sb-dash-item.national:hover{background:#dbeafe}
+.sb-dash-item svg{width:13px;height:13px;stroke:currentColor;stroke-width:1.8;fill:none;flex-shrink:0}
+.sb-dash-lbl{opacity:0;transition:opacity .12s;margin-left:8px;flex:1}
+.sb-dash-ext{opacity:0;transition:opacity .12s;font-size:10px;color:var(--txt3)}
+.sidebar:hover .sb-dash-lbl,.sidebar:hover .sb-dash-ext{opacity:1}
+.sb-dash-item.national .sb-dash-lbl{color:var(--txt2)}
+
+.sb-foot{border-top:1px solid var(--border);padding:8px 6px;flex-shrink:0;width:var(--sb-open)}
+.sb-user-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:background .12s}
+.sb-user-row:hover{background:var(--bg3)}
+.sb-avatar{width:24px;height:24px;border-radius:50%;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#1d6f4e;flex-shrink:0}
+.sb-uname{font-size:12px;font-weight:500;color:var(--txt1);opacity:0;transition:opacity .12s;white-space:nowrap}
+.sb-urole{font-size:10px;color:var(--txt3);opacity:0;transition:opacity .12s}
+.sidebar:hover .sb-uname,.sidebar:hover .sb-urole{opacity:1}
+
+/* ══ MAIN ══ */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;margin-left:var(--sb-w)}
+
+/* ══ TOPBAR ══ */
+.topbar{
+  height:48px;flex-shrink:0;background:var(--bg);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:10px;
+}
+.topbar-title{font-size:14px;font-weight:600;color:var(--txt1)}
+.topbar-sep{width:1px;height:16px;background:var(--border2)}
+.topbar-sub{font-size:12px;color:var(--txt3)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+
+.badge-live{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:#1d6f4e;background:var(--green-bg);border:1px solid var(--green-border);border-radius:4px;padding:2px 8px}
+.badge-live::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 1.6s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+.sel{
+  height:28px;padding:0 8px;border-radius:5px;font-size:12px;font-weight:400;
+  border:1px solid var(--border2);background:var(--bg);color:var(--txt1);
+  font-family:'Inter',sans-serif;cursor:pointer;outline:none;
+}
+.sel:focus{border-color:var(--green)}
+
+.btn-danger-sm{
+  display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:5px;
+  font-size:12px;font-weight:500;color:var(--red);
+  border:1px solid #fca5a5;background:var(--red-bg);
+}
+.btn-user-sm{
+  display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:5px;
+  font-size:12px;font-weight:500;color:#1d6f4e;
+  border:1px solid var(--green-border);background:var(--green-bg);cursor:pointer;
+}
+.btn-user-sm:hover{background:#dcfce7}
+.btn-user-sm svg,.btn-danger-sm svg{width:12px;height:12px;stroke:currentColor;stroke-width:2;fill:none}
+
+/* ══ CONTENT ══ */
+.content{flex:1;overflow-y:auto;background:var(--bg2)}
+
+/* ══ KPI BAR ══ */
+.kpi-bar{background:var(--bg);border-bottom:1px solid var(--border);display:flex}
+.kpi-cell{flex:1;padding:12px 16px;border-right:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.kpi-cell:last-child{border-right:none}
+.kpi-icon{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kpi-icon svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.kpi-lbl{font-size:11px;color:var(--txt3);margin-bottom:1px}
+.kpi-val{font-size:17px;font-weight:600;color:var(--txt1);line-height:1.1}
+.kpi-delta{font-size:10px;margin-top:2px}
+.up{color:#1d6f4e}.dn{color:var(--red)}
+
+/* ══ MAIN GRID ══ */
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:16px}
+
+.card{background:var(--bg);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.card-wide{grid-column:span 2}
+.card-full{grid-column:span 3}
+
+.card-head{padding:12px 14px 0;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.ch-label{font-size:11px;font-weight:600;color:var(--txt3);letter-spacing:.04em;text-transform:uppercase;flex:1}
+.ch-meta{font-size:11px;color:var(--txt3)}
+.ch-badge{font-size:10px;font-weight:500;padding:1px 6px;border-radius:3px;background:var(--green-bg);color:#1d6f4e;border:1px solid var(--green-border)}
+
+.card-body{padding:0 14px 14px}
+
+/* ══ TABLE ══ */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{
+  padding:0 10px 8px 0;font-size:11px;font-weight:500;color:var(--txt3);
+  text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;
+  letter-spacing:.02em;
+}
+.tbl th:last-child{text-align:right;padding-right:0}
+.tbl td{padding:7px 10px 7px 0;border-bottom:1px solid var(--border);color:var(--txt1);vertical-align:middle}
+.tbl td:last-child{text-align:right;padding-right:0}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--bg2)}
+
+.rank-num{font-size:11px;color:var(--txt3);width:20px}
+.region-name{font-size:12px;font-weight:500;color:var(--txt1)}
+.region-sub{font-size:11px;color:var(--txt3);margin-top:1px}
+.bar-wrap{width:72px;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px}
+.bar-fill{height:100%;border-radius:2px}
+
+/* ══ TYPE BADGE ══ */
+.type-chip{
+  font-size:10px;font-weight:500;padding:1px 6px;border-radius:3px;
+  border:1px solid;white-space:nowrap;
+}
+
+/* ══ WHO PANEL ══ */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-cell{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:10px 12px}
+.stat-cell-lbl{font-size:11px;color:var(--txt3);margin-bottom:3px}
+.stat-cell-val{font-size:18px;font-weight:600;color:var(--txt1);line-height:1}
+.stat-cell-sub{font-size:10px;color:var(--txt3);margin-top:2px}
+
+/* ══ WHY BARS ══ */
+.why-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.why-lbl{width:60px;font-size:11px;color:var(--txt2);text-align:right;flex-shrink:0}
+.why-track{flex:1;height:14px;background:var(--bg3);border-radius:2px;overflow:hidden;border:1px solid var(--border)}
+.why-fill{height:100%;display:flex;align-items:center;padding-left:5px;font-size:9px;font-weight:600;color:#fff;border-radius:2px}
+.why-ct{font-size:11px;color:var(--txt3);min-width:30px;text-align:right}
+
+/* ══ HOW LIST ══ */
+.how-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.how-item:last-child{border-bottom:none}
+.how-icon{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--border)}
+.how-icon svg{width:13px;height:13px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.how-name{font-size:12px;font-weight:500;flex:1}
+.how-pct{font-size:11px;color:var(--txt3);width:30px;text-align:right}
+.how-track{flex:1;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-left:4px}
+.how-bar{height:100%;border-radius:2px}
+
+/* ══ HEATMAP ══ */
+.hmap-row{display:flex;align-items:center;gap:2px;margin-bottom:2px}
+.hmap-day{font-size:10px;color:var(--txt3);width:22px;text-align:right;flex-shrink:0;margin-right:3px}
+.hmap-cell{height:16px;border-radius:2px;flex:1;min-width:0;cursor:default}
+.hmap-hlbl{font-size:9px;color:var(--txt3);flex:1;text-align:center;min-width:0}
+
+/* ══ LEVEL DONUT ══ */
+.level-row{display:flex;align-items:center;gap:4px;margin-bottom:6px}
+.level-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.level-name{font-size:11px;color:var(--txt2);flex:1}
+.level-track{width:60px;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.level-fill{height:100%;border-radius:2px}
+.level-pct{font-size:11px;color:var(--txt1);font-weight:500;width:28px;text-align:right}
+
+/* ══ SAFETY ══ */
+.safety-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.safety-item:last-child{border-bottom:none}
+.safety-icon{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--border)}
+.safety-icon svg{width:13px;height:13px;stroke:currentColor;stroke-width:1.6;fill:none}
+.safety-name{font-size:12px;font-weight:500;flex:1}
+.safety-sub{font-size:10px;color:var(--txt3);margin-top:1px}
+.safety-val{font-size:13px;font-weight:600}
+
+/* ══ FLOW TABLE ══ */
+.flow-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.flow-tbl th{padding:0 8px 6px 0;font-size:10px;font-weight:500;color:var(--txt3);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+.flow-tbl td{padding:6px 8px 6px 0;border-bottom:1px solid var(--border);vertical-align:middle}
+.flow-tbl tr:last-child td{border-bottom:none}
+.flow-tbl tr:hover td{background:var(--bg2)}
+.mono{font-family:'SF Mono','Fira Code',monospace;font-size:10px;color:var(--txt3)}
+.arrow-cell{color:var(--txt3);font-size:10px;padding:0 2px !important}
+
+/* ══ TAB ══ */
+.tab-row{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:10px}
+.tab-btn{padding:6px 12px;font-size:11px;font-weight:500;color:var(--txt3);background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:color .12s;font-family:'Inter',sans-serif}
+.tab-btn.active{color:var(--green-dk);border-bottom-color:var(--green)}
+.tab-btn:hover:not(.active){color:var(--txt1)}
+
+/* ══ SCROLL ══ */
+.scroll{max-height:240px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.scroll::-webkit-scrollbar{width:3px}
+.scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ══ TOAST ══ */
+.toast{position:fixed;bottom:20px;right:20px;z-index:9999;background:var(--txt1);color:#fff;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:500;opacity:0;transform:translateY(6px);transition:all .2s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+<div class="sb-inner">
+
+  <div class="sb-top">
+    <div class="sb-logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+    </div>
+    <span class="sb-logo-text">K-Traffic</span>
+  </div>
+
+  <div class="sb-section">개요</div>
+
+  <div class="sb-item active" onclick="setActive(this)">
+    <span class="sb-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+    <span class="sb-lbl">대시보드</span>
+  </div>
+
+  <div class="sb-section">이동 현황</div>
+
+  <div class="sb-item" onclick="setActive(this)">
+    <span class="sb-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+    <span class="sb-lbl">지역별 이동</span>
+  </div>
+
+  <div class="sb-item" onclick="setActive(this)">
+    <span class="sb-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+    <span class="sb-lbl">읍면동 분석</span>
+  </div>
+
+  <div class="sb-item" onclick="setActive(this)">
+    <span class="sb-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+    <span class="sb-lbl">실시간 흐름</span>
+  </div>
+
+  <div class="sb-section">물류</div>
+
+  <div class="sb-item" onclick="setActive(this)">
+    <span class="sb-icon"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span>
+    <span class="sb-lbl">물류·배송</span>
+  </div>
+
+  <div class="sb-section">안전</div>
+
+  <div class="sb-item" onclick="setActive(this)" style="color:var(--red)">
+    <span class="sb-icon"><svg viewBox="0 0 24 24"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+    <span class="sb-lbl" style="color:var(--red)">긴급 신고</span>
+  </div>
+
+  <div class="sb-section">설정</div>
+
+  <div class="sb-item" onclick="setActive(this)">
+    <span class="sb-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></span>
+    <span class="sb-lbl">설정</span>
+  </div>
+
+  <!-- 대시보드 바로가기 -->
+  <div class="sb-dash-group">
+    <div class="sb-dash-item user" onclick="openUserDash()" title="사용자 교통·물류 대시보드">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span class="sb-dash-lbl">사용자 대시보드</span>
+      <span class="sb-dash-ext">↗</span>
+    </div>
+    <div class="sb-dash-item national" onclick="toast_show('이미 국가 대시보드입니다.')" title="국가 교통·물류 대시보드 (현재)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="sb-dash-lbl">국가 대시보드</span>
+      <span class="sb-dash-ext">●</span>
+    </div>
+  </div>
+
+  <div class="sb-foot">
+    <a href="https://gopang.net" style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:5px;color:var(--txt3);font-size:12px;transition:background .12s;white-space:nowrap">
+      <svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span class="sb-uname">← 고팡으로</span>
+    </a>
+    <div class="sb-user-row">
+      <div class="sb-avatar">관</div>
+      <div>
+        <div class="sb-uname" id="sb-uname">관리자</div>
+        <div class="sb-urole">PDV L2 · <span id="auth-badge">미인증</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <span class="topbar-title">국가 교통·물류 대시보드</span>
+    <div class="topbar-sep"></div>
+    <span class="topbar-sub">시군구·읍면동 단위 5W1H 실시간 분석</span>
+    <div class="topbar-right">
+      <select class="sel" id="sel-date" onchange="applyFilter()">
+        <option value="today">오늘 (2026.06.03)</option>
+        <option value="week">이번 주</option>
+        <option value="month">이번 달</option>
+      </select>
+      <select class="sel" id="sel-region" onchange="applyFilter()">
+        <option value="all">전국</option>
+        <option value="jeju">제주특별자치도</option>
+        <option value="seoul">서울특별시</option>
+        <option value="busan">부산광역시</option>
+      </select>
+      <select class="sel" id="sel-type" onchange="applyFilter()">
+        <option value="all">전체 수단</option>
+        <option value="taxi">택시</option>
+        <option value="car">자가용 공유</option>
+        <option value="bus">버스</option>
+        <option value="cargo">화물</option>
+      </select>
+      <button class="btn-user-sm" onclick="openUserDash()">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        사용자 대시보드
+      </button>
+      <div class="badge-live">실시간 PDV</div>
+      <button class="btn-danger-sm" onclick="toast_show('🚨 112 연결 중…')">
+        <svg viewBox="0 0 24 24"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        긴급
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI BAR -->
+  <div class="kpi-bar">
+    <div class="kpi-cell">
+      <div class="kpi-icon" style="background:#f0fdf9;color:#1d6f4e"><svg viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
+      <div>
+        <div class="kpi-lbl">총 이동 건수</div>
+        <div class="kpi-val" id="k1">8,421</div>
+        <div class="kpi-delta up">↑ 15.2% 전월 대비</div>
+      </div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-icon" style="background:#eff6ff;color:#1d4ed8"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div>
+        <div class="kpi-lbl">이용 인원</div>
+        <div class="kpi-val" id="k2">12,847</div>
+        <div class="kpi-delta up">↑ 9.7% 전월 대비</div>
+      </div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-icon" style="background:#fffbeb;color:#92400e"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+      <div>
+        <div class="kpi-lbl">총 GDC 결제</div>
+        <div class="kpi-val" id="k3">94,350</div>
+        <div class="kpi-delta up">↑ 22.1% 전월 대비</div>
+      </div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-icon" style="background:#f5f3ff;color:#5b21b6"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <div>
+        <div class="kpi-lbl">PDV 인증율</div>
+        <div class="kpi-val" id="k4">99.3%</div>
+        <div class="kpi-delta up">↑ 0.4%p 전월 대비</div>
+      </div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-icon" style="background:#fef2f2;color:#991b1b"><svg viewBox="0 0 24 24"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <div>
+        <div class="kpi-lbl">긴급 신고</div>
+        <div class="kpi-val" id="k5">2</div>
+        <div class="kpi-delta dn">↓ 3건 전월 대비</div>
+      </div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-icon" style="background:#f0fdf9;color:#1d6f4e"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+      <div>
+        <div class="kpi-lbl">평균 신뢰 점수</div>
+        <div class="kpi-val" id="k6">4.87</div>
+        <div class="kpi-delta up">↑ 0.05 전월 대비</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+  <div class="grid">
+
+    <!-- 어디서→어디로 -->
+    <div class="card card-wide">
+      <div class="card-head">
+        <span class="ch-label">어디서 → 어디로 — 시군구 출발 TOP</span>
+        <div class="tab-row" style="margin:0;border:none">
+          <button class="tab-btn active" onclick="switchTab(this,'from')">출발지</button>
+          <button class="tab-btn" onclick="switchTab(this,'to')">도착지</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="scroll">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th style="width:20px">#</th>
+                <th>시군구 · 읍면동</th>
+                <th>주요 도착지</th>
+                <th>건수</th>
+                <th>비율</th>
+                <th>GDC</th>
+              </tr>
+            </thead>
+            <tbody id="region-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 누가 -->
+    <div class="card">
+      <div class="card-head"><span class="ch-label">누가 — 이용자 유형</span></div>
+      <div class="card-body">
+        <div class="stat-grid" style="margin-bottom:14px">
+          <div class="stat-cell">
+            <div class="stat-cell-lbl">승객</div>
+            <div class="stat-cell-val" style="color:#1d4ed8">7,304</div>
+            <div class="stat-cell-sub">PDV L0 이상</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-cell-lbl">운전자</div>
+            <div class="stat-cell-val" style="color:#1d6f4e">1,117</div>
+            <div class="stat-cell-sub">PDV L1 인증</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-cell-lbl">화주</div>
+            <div class="stat-cell-val" style="color:#92400e">892</div>
+            <div class="stat-cell-sub">물류 요청자</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-cell-lbl">기관</div>
+            <div class="stat-cell-val" style="color:#5b21b6">108</div>
+            <div class="stat-cell-sub">플랫폼 감사</div>
+          </div>
+        </div>
+        <div style="font-size:11px;font-weight:500;color:var(--txt3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">PDV 인증 레벨</div>
+        <div id="level-rows"></div>
+      </div>
+    </div>
+
+    <!-- 언제 -->
+    <div class="card card-full">
+      <div class="card-head">
+        <span class="ch-label">언제 — 요일 × 시간 이동 밀도</span>
+        <span class="ch-meta">색이 진할수록 이동 집중</span>
+      </div>
+      <div class="card-body">
+        <div style="overflow-x:auto">
+        <div style="min-width:480px">
+          <div style="display:flex;margin-bottom:3px">
+            <div style="width:26px"></div>
+            <div id="h-labels" style="flex:1;display:grid;grid-template-columns:repeat(24,1fr);gap:2px"></div>
+          </div>
+          <div id="heatmap"></div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:10px;color:var(--txt3)">
+            <span>적음</span>
+            <div style="display:flex;gap:2px" id="heat-legend"></div>
+            <span>많음</span>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 왜 -->
+    <div class="card">
+      <div class="card-head"><span class="ch-label">왜 — 이동 목적</span></div>
+      <div class="card-body" id="why-body"></div>
+    </div>
+
+    <!-- 어떻게 -->
+    <div class="card">
+      <div class="card-head"><span class="ch-label">어떻게 — 이동 수단</span></div>
+      <div class="card-body">
+        <div id="how-body"></div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:500;color:var(--txt3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">평균 이동 거리</div>
+          <div id="how-dist"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 안전 -->
+    <div class="card">
+      <div class="card-head"><span class="ch-label">안전·분쟁 현황</span></div>
+      <div class="card-body" id="safety-body"></div>
+    </div>
+
+    <!-- 무엇: PDV 기록 -->
+    <div class="card card-full">
+      <div class="card-head">
+        <span class="ch-label">무엇 — PDV 이동 기록 (시군구·읍면동 상세)</span>
+        <span class="ch-badge">실시간</span>
+      </div>
+      <div class="card-body">
+        <div class="scroll" style="max-height:220px">
+          <table class="flow-tbl">
+            <thead>
+              <tr>
+                <th>PDV ID</th>
+                <th>IPv6</th>
+                <th>일시</th>
+                <th>출발 읍면동</th>
+                <th></th>
+                <th>도착 읍면동</th>
+                <th>수단</th>
+                <th>목적</th>
+                <th>GDC</th>
+                <th>레벨</th>
+              </tr>
+            </thead>
+            <tbody id="flow-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 읍면동 드릴다운 -->
+    <div class="card card-wide">
+      <div class="card-head"><span class="ch-label">읍면동 이동 집중도 — 제주특별자치도</span></div>
+      <div class="card-body">
+        <div class="scroll">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>#</th><th>읍면동</th><th>시군구</th>
+                <th>출발</th><th>도착</th><th>순유입</th>
+                <th>피크</th><th>GDC</th>
+              </tr>
+            </thead>
+            <tbody id="dong-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /grid -->
+  </div><!-- /content -->
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+const REGIONS=[
+  {rank:1,gun:'제주시',dong:'한림읍 한림로',si:'제주특별자치도',to:'제주시청',trips:842,pct:10.0,gdc:7381},
+  {rank:2,gun:'제주시',dong:'노형동',si:'제주특별자치도',to:'제주국제공항',trips:714,pct:8.5,gdc:9820},
+  {rank:3,gun:'서귀포시',dong:'서귀포시청 인근',si:'제주특별자치도',to:'중문관광단지',trips:603,pct:7.2,gdc:6234},
+  {rank:4,gun:'제주시',dong:'이도2동',si:'제주특별자치도',to:'제주대병원',trips:521,pct:6.2,gdc:4102},
+  {rank:5,gun:'해운대구',dong:'우동',si:'부산광역시',to:'부산역',trips:487,pct:5.8,gdc:8240},
+  {rank:6,gun:'강남구',dong:'역삼동',si:'서울특별시',to:'판교테크노밸리',trips:445,pct:5.3,gdc:11200},
+  {rank:7,gun:'수원시 영통구',dong:'이의동',si:'경기도',to:'성남 분당구',trips:398,pct:4.7,gdc:6750},
+  {rank:8,gun:'송파구',dong:'문정동',si:'서울특별시',to:'강남구 삼성동',trips:374,pct:4.4,gdc:3980},
+  {rank:9,gun:'제주시',dong:'애월읍 하귀리',si:'제주특별자치도',to:'제주시 연동',trips:350,pct:4.2,gdc:2940},
+  {rank:10,gun:'창원시 의창구',dong:'용호동',si:'경상남도',to:'창원역',trips:318,pct:3.8,gdc:3820},
+];
+const DONGS=[
+  {dong:'한림읍',gun:'제주시',dep:842,arr:690,peak:'08–09시',gdc:7381},
+  {dong:'노형동',gun:'제주시',dep:714,arr:820,peak:'17–18시',gdc:9820},
+  {dong:'연동',gun:'제주시',dep:598,arr:710,peak:'09–10시',gdc:6140},
+  {dong:'이도2동',gun:'제주시',dep:521,arr:480,peak:'08–09시',gdc:4102},
+  {dong:'애월읍',gun:'제주시',dep:350,arr:410,peak:'07–08시',gdc:2940},
+  {dong:'서홍동',gun:'서귀포시',dep:310,arr:280,peak:'09–10시',gdc:2750},
+  {dong:'중문동',gun:'서귀포시',dep:280,arr:603,peak:'10–12시',gdc:6234},
+  {dong:'대정읍',gun:'서귀포시',dep:198,arr:175,peak:'07–08시',gdc:1580},
+  {dong:'성산읍',gun:'서귀포시',dep:162,arr:240,peak:'09–11시',gdc:2010},
+  {dong:'구좌읍',gun:'제주시',dep:145,arr:130,peak:'08–09시',gdc:1240},
+];
+const FLOWS=[
+  {id:'RPT-24810',ipv6:'2601:a4b:…c9f0',time:'09:28',from:'한림읍 한림로',to:'문연로 (도청)',how:'자가용 공유',why:'출퇴근',gdc:8,level:'L1'},
+  {id:'RPT-24809',ipv6:'2601:b2c:…d1a3',time:'09:22',from:'서귀포시 서홍동',to:'서귀포 중앙로',how:'택시',why:'업무',gdc:12,level:'L1'},
+  {id:'RPT-24808',ipv6:'2601:e3f:…8b02',time:'09:15',from:'노형동',to:'제주국제공항',how:'버스',why:'여행',gdc:2,level:'L0'},
+  {id:'RPT-24807',ipv6:'2601:cc1:…5f44',time:'09:10',from:'애월읍 하귀리',to:'이도2동 병원',how:'자가용 공유',why:'의료',gdc:9,level:'L2'},
+  {id:'RPT-24806',ipv6:'2601:d4e:…2290',time:'09:04',from:'이도2동',to:'아라동 대학교',how:'버스',why:'교육',gdc:2,level:'L0'},
+  {id:'RPT-24805',ipv6:'2601:f1a:…77bc',time:'09:00',from:'중문동',to:'연동 (화물)',how:'화물차',why:'물류',gdc:35,level:'L1'},
+  {id:'RPT-24804',ipv6:'2601:ab2:…e3c8',time:'08:55',from:'구좌읍',to:'조천읍',how:'택시',why:'출퇴근',gdc:14,level:'L1'},
+  {id:'RPT-24803',ipv6:'2601:99f:…1d70',time:'08:48',from:'한림읍 귀덕리',to:'제주국제공항',how:'자가용 공유',why:'여행',gdc:18,level:'L0'},
+];
+const WHY=[
+  {label:'출퇴근',n:2840,color:'#3ecf8e'},
+  {label:'업무',n:1820,color:'#3b82f6'},
+  {label:'여행·관광',n:1440,color:'#8b5cf6'},
+  {label:'물류·배송',n:1102,color:'#f59e0b'},
+  {label:'의료',n:620,color:'#f97316'},
+  {label:'교육',n:380,color:'#10b981'},
+  {label:'기타',n:219,color:'#9ca3af'},
+];
+const WHY_TOTAL=WHY.reduce((a,b)=>a+b.n,0);
+const HOW=[
+  {name:'택시',share:34,dist:'12.4km',color:'#f97316'},
+  {name:'자가용 공유',share:28,dist:'18.2km',color:'#3b82f6'},
+  {name:'버스',share:22,dist:'9.8km',color:'#3ecf8e'},
+  {name:'화물차',share:11,dist:'28.7km',color:'#f59e0b'},
+  {name:'오토바이',share:5,dist:'6.1km',color:'#8b5cf6'},
+];
+const LEVELS=[
+  {label:'L0',val:48,color:'#9ca3af'},
+  {label:'L1',val:35,color:'#3b82f6'},
+  {label:'L2',val:14,color:'#3ecf8e'},
+  {label:'L3+',val:3,color:'#f59e0b'},
+];
+const TYPE_CHIP={
+  '자가용 공유':{bg:'#eff6ff',tc:'#1d4ed8',bc:'#bfdbfe'},
+  '택시':{bg:'#fff7ed',tc:'#9a3412',bc:'#fed7aa'},
+  '버스':{bg:'#f0fdf9',tc:'#1d6f4e',bc:'#a7f3d0'},
+  '화물차':{bg:'#fffbeb',tc:'#92400e',bc:'#fde68a'},
+};
+const LVL_CHIP={
+  'L0':{bg:'#f9fafb',tc:'#6b7280',bc:'#e5e7eb'},
+  'L1':{bg:'#eff6ff',tc:'#1d4ed8',bc:'#bfdbfe'},
+  'L2':{bg:'#f0fdf9',tc:'#1d6f4e',bc:'#a7f3d0'},
+};
+const DAYS=['월','화','수','목','금','토','일'];
+const HMAP=DAYS.map((_,di)=>Array.from({length:24},(_,h)=>{
+  const base=(di<5)?(h<6?4:h<9?80+Math.random()*30:h<12?55+Math.random()*20:h<14?40+Math.random()*15:h<18?50+Math.random()*25:h<20?65+Math.random()*30:h<22?28+Math.random()*15:8):(h<7?4:h<11?55+Math.random()*30:h<16?75+Math.random()*25:h<20?85+Math.random()*20:h<22?45+Math.random()*20:12);
+  return Math.round(base);
+}));
+
+function renderRegion(data){
+  const max=data[0].trips;
+  document.getElementById('region-body').innerHTML=data.map(r=>`
+    <tr>
+      <td class="rank-num">${r.rank}</td>
+      <td>
+        <div class="region-name">${r.gun}</div>
+        <div class="region-sub">${r.dong} · ${r.si}</div>
+      </td>
+      <td style="font-size:11px;color:var(--txt2)">${r.to}</td>
+      <td style="font-weight:500">${r.trips.toLocaleString()}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(r.trips/max*100)}%;background:var(--green)"></div></div>
+          <span style="font-size:10px;color:var(--txt3)">${r.pct.toFixed(1)}%</span>
+        </div>
+      </td>
+      <td style="font-weight:500;color:#92400e">${r.gdc.toLocaleString()}</td>
+    </tr>`).join('');
+}
+function renderDong(){
+  document.getElementById('dong-body').innerHTML=DONGS.map((d,i)=>{
+    const net=d.arr-d.dep;
+    return`<tr>
+      <td class="rank-num">${i+1}</td>
+      <td><div class="region-name">${d.dong}</div></td>
+      <td style="font-size:11px;color:var(--txt2)">${d.gun}</td>
+      <td style="font-weight:500">${d.dep.toLocaleString()}</td>
+      <td style="font-weight:500">${d.arr.toLocaleString()}</td>
+      <td style="font-weight:500;color:${net>0?'#1d6f4e':'#991b1b'}">${net>0?'+':''}${net}</td>
+      <td style="font-size:11px;color:var(--txt2)">${d.peak}</td>
+      <td style="font-weight:500;color:#92400e">${d.gdc.toLocaleString()}</td>
+    </tr>`;}).join('');
+}
+function renderFlow(data){
+  document.getElementById('flow-body').innerHTML=data.map(f=>{
+    const tc=TYPE_CHIP[f.how]||{bg:'#f9fafb',tc:'#6b7280',bc:'#e5e7eb'};
+    const lc=LVL_CHIP[f.level]||LVL_CHIP['L0'];
+    return`<tr>
+      <td class="mono">${f.id}</td>
+      <td class="mono">${f.ipv6}</td>
+      <td style="font-size:11px;white-space:nowrap">${f.time}</td>
+      <td style="font-size:11px">${f.from}</td>
+      <td class="arrow-cell">→</td>
+      <td style="font-size:11px">${f.to}</td>
+      <td><span class="type-chip" style="background:${tc.bg};color:${tc.tc};border-color:${tc.bc}">${f.how}</span></td>
+      <td style="font-size:11px;color:var(--txt2)">${f.why}</td>
+      <td style="font-weight:500;color:#92400e">${f.gdc}</td>
+      <td><span class="type-chip" style="background:${lc.bg};color:${lc.tc};border-color:${lc.bc}">${f.level}</span></td>
+    </tr>`;}).join('');
+}
+function renderWhy(){
+  document.getElementById('why-body').innerHTML=WHY.map(w=>`
+    <div class="why-row">
+      <span class="why-lbl">${w.label}</span>
+      <div class="why-track">
+        <div class="why-fill" style="width:${Math.round(w.n/WHY_TOTAL*100)}%;background:${w.color}">${Math.round(w.n/WHY_TOTAL*100)}%</div>
+      </div>
+      <span class="why-ct">${w.n.toLocaleString()}</span>
+    </div>`).join('');
+}
+function renderHow(){
+  document.getElementById('how-body').innerHTML=HOW.map(h=>`
+    <div class="how-item">
+      <div class="how-icon" style="color:${h.color}"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+          <span class="how-name">${h.name}</span>
+          <span style="font-size:11px;font-weight:500">${h.share}%</span>
+        </div>
+        <div class="how-track"><div class="how-bar" style="width:${h.share}%;background:${h.color}"></div></div>
+      </div>
+    </div>`).join('');
+  document.getElementById('how-dist').innerHTML=HOW.map(h=>`
+    <div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--txt2)">${h.name}</span>
+      <span style="font-weight:500">${h.dist}</span>
+    </div>`).join('');
+}
+function renderLevels(){
+  document.getElementById('level-rows').innerHTML=LEVELS.map(l=>`
+    <div class="level-row">
+      <div class="level-dot" style="background:${l.color}"></div>
+      <span class="level-name">${l.label}</span>
+      <div class="level-track"><div class="level-fill" style="width:${l.val}%;background:${l.color}"></div></div>
+      <span class="level-pct">${l.val}%</span>
+    </div>`).join('');
+}
+function renderHeatmap(){
+  const maxV=Math.max(...HMAP.flat());
+  const steps=['#f3f4f6','#bbf7d0','#6ee7b7','#34d399','#10b981','#059669'];
+  document.getElementById('h-labels').innerHTML=Array.from({length:24},(_,h)=>`<span class="hmap-hlbl">${h}</span>`).join('');
+  document.getElementById('heatmap').innerHTML=HMAP.map((row,di)=>`
+    <div class="hmap-row">
+      <span class="hmap-day">${DAYS[di]}</span>
+      ${row.map(v=>{
+        const idx=Math.min(5,Math.floor(v/maxV*5.99));
+        return`<div class="hmap-cell" style="background:${steps[idx]}" title="${v}건"></div>`;
+      }).join('')}
+    </div>`).join('');
+  document.getElementById('heat-legend').innerHTML=steps.map(c=>`<div style="width:18px;height:8px;background:${c};border-radius:1px;border:1px solid #e5e7eb"></div>`).join('');
+}
+function renderSafety(){
+  const items=[
+    {icon:'M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z',bg:'#fef2f2',ic:'#991b1b',label:'긴급 신고',val:'2건',sub:'처리 중 0건'},
+    {icon:'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',bg:'#f9fafb',ic:'#6b7280',label:'분쟁 발생',val:'0건',sub:'PDV 즉시 해결'},
+    {icon:'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4',bg:'#f0fdf9',ic:'#1d6f4e',label:'PDV 무결성',val:'정상',sub:'284,912건 해시 일치'},
+    {icon:'M18 6 6 18M6 6l12 12',bg:'#f9fafb',ic:'#6b7280',label:'미인증 차량',val:'0건',sub:'매칭 전 자동 차단'},
+  ];
+  document.getElementById('safety-body').innerHTML=items.map(it=>`
+    <div class="safety-item">
+      <div class="safety-icon" style="background:${it.bg};color:${it.ic}"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="${it.icon}"/></svg></div>
+      <div style="flex:1">
+        <div class="safety-name">${it.label}</div>
+        <div class="safety-sub">${it.sub}</div>
+      </div>
+      <div class="safety-val" style="color:${it.ic}">${it.val}</div>
+    </div>`).join('');
+}
+
+function switchTab(btn,mode){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(mode==='to'){const d=[...REGIONS].sort((a,b)=>b.gdc-a.gdc).map((r,i)=>({...r,rank:i+1}));renderRegion(d);}
+  else renderRegion(REGIONS);
+}
+function applyFilter(){
+  const type=document.getElementById('sel-type').value;
+  const data=type==='all'?FLOWS:FLOWS.filter(f=>{
+    const map={taxi:'택시',car:'자가용 공유',bus:'버스',cargo:'화물차'};
+    return map[type]===f.how;
+  });
+  renderFlow(data);
+}
+function setActive(el){document.querySelectorAll('.sb-item').forEach(e=>e.classList.remove('active'));el.classList.add('active');}
+function openUserDash(){window.open('user-dashboard.html','_blank');}
+function toast_show(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+let tick=0;
+setInterval(()=>{
+  tick++;
+  document.getElementById('k1').textContent=(8421+tick*Math.floor(Math.random()*3)).toLocaleString();
+  document.getElementById('k2').textContent=(12847+tick*Math.floor(Math.random()*4)).toLocaleString();
+  document.getElementById('k3').textContent=(94350+tick*Math.floor(Math.random()*30)).toLocaleString();
+},4000);
+
+renderRegion(REGIONS);
+renderDong();
+renderFlow(FLOWS);
+renderWhy();
+renderHow();
+renderLevels();
+renderHeatmap();
+renderSafety();
+</script>
+
+<!-- K-Traffic 인증 + PDV -->
+<script type="module" src="https://gopang.net/auth/subsystem-auth.js"></script>
+<script>
+window._onGopangAuth=function(user){
+  const b=document.getElementById('auth-badge');
+  if(b){const c={L0:'#9ca3af',L1:'#3b82f6',L2:'#3ecf8e',L3:'#f59e0b'};b.textContent=user.level||'L0';b.style.color=c[user.level]||c.L0;}
+  window._gopangUser=user;
+};
+function _sendPdvReport(a){
+  const u=window._gopangUser;if(!u?.ipv6)return;
+  fetch('https://gopang-proxy.tensor-city.workers.dev/pdv/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({report:{svc:'traffic',type:a.type||'action',who:{ipv6:u.ipv6,role:a.role||'user',recipients:['gopang-pdv']},when:{generated_at:new Date().toISOString(),period_start:new Date().toISOString(),period_end:new Date().toISOString()},where:{svc_url:'https://traffic.gopang.net',label:a.label||location.pathname},what:{summary:a.summary},how:{method:'subsystem-auth',auth_level:u.level||'L0'},why:{goal:a.goal||'K-Traffic 관리 대시보드'}}})}).catch(()=>{});
+}
+window._sendPdvReport=_sendPdvReport;
+</script>
+</body>
+</html>

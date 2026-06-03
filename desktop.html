@@ -65,6 +65,55 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
 .sidebar:hover .sb-dot{opacity:1}
 .sb-item.active .sb-dot{background:rgba(255,255,255,.7)}
 .sb-foot{margin-top:auto;border-top:1px solid var(--border);padding:10px 6px;flex-shrink:0;width:var(--sb-open)}
+.sb-dash-links{padding:8px 6px 4px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:4px;width:var(--sb-open);flex-shrink:0}
+.sb-dash-btn{display:flex;align-items:center;gap:9px;height:34px;padding:0 10px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap;text-align:left;font-family:'Inter',sans-serif;transition:all .13s;font-size:12px;font-weight:600;text-decoration:none;width:100%}
+.sb-dash-btn.user{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.sb-dash-btn.user:hover{background:#dbeafe}
+.sb-dash-btn.realtime{background:#fdf4ff;color:#6b21a8;border:1px solid #e9d5ff}
+.sb-dash-btn.realtime:hover{background:#f3e8ff}
+.btn-dash-realtime{padding:6px 13px;border-radius:8px;font-size:12px;font-weight:600;background:#fdf4ff;color:#6b21a8;border:1px solid #e9d5ff;display:flex;align-items:center;gap:5px;cursor:pointer;transition:background .13s;white-space:nowrap}
+.btn-dash-realtime:hover{background:#f3e8ff}
+.btn-dash-realtime svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.dash-banner.realtime{background:#fdf4ff;border-color:#e9d5ff}
+.dash-banner.realtime:hover{background:#f3e8ff;border-color:#d8b4fe}
+.dash-banner.realtime .db-icon{background:#7c3aed;color:#fff}
+.dash-banner.realtime .db-label{color:#6b21a8}
+.dash-banner.realtime .db-arrow{color:#7c3aed}
+.dash-banner.webapp{background:#fff7ed;border-color:#fed7aa}
+.dash-banner.webapp:hover{background:#ffedd5;border-color:#fdba74}
+.dash-banner.webapp .db-icon{background:#ea580c;color:#fff}
+.dash-banner.webapp .db-label{color:#9a3412}
+.dash-banner.webapp .db-arrow{color:#ea580c}
+.sb-dash-btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.sb-dash-lbl{opacity:0;transition:opacity .13s .04s;flex:1}
+.sidebar:hover .sb-dash-lbl{opacity:1}
+.sb-dash-ext{opacity:0;transition:opacity .13s .04s;font-size:9px}
+.sidebar:hover .sb-dash-ext{opacity:1}
+.btn-dash-user{padding:6px 13px;border-radius:8px;font-size:12px;font-weight:600;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;display:flex;align-items:center;gap:5px;cursor:pointer;transition:background .13s;white-space:nowrap}
+.btn-dash-user:hover{background:#dbeafe}
+.btn-dash-national{padding:6px 13px;border-radius:8px;font-size:12px;font-weight:600;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;display:flex;align-items:center;gap:5px;cursor:pointer;transition:background .13s;white-space:nowrap}
+.btn-dash-national:hover{background:#d1fae5}
+.btn-dash-user svg,.btn-dash-national svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.dash-banner-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:28px 40px 0;max-width:1020px;margin:0 auto}
+.dash-banner{border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:18px;cursor:pointer;transition:all .18s;text-decoration:none;border:1.5px solid transparent}
+.dash-banner:hover{transform:translateY(-2px)}
+.dash-banner.user{background:#eff6ff;border-color:#bfdbfe}
+.dash-banner.user:hover{background:#dbeafe;border-color:#93c5fd}
+.dash-banner.national{background:#ecfdf5;border-color:#a7f3d0}
+.dash-banner.national:hover{background:#d1fae5;border-color:#6ee7b7}
+.db-icon{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.db-icon svg{width:22px;height:22px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.dash-banner.user .db-icon{background:#2563eb;color:#fff}
+.dash-banner.national .db-icon{background:#059669;color:#fff}
+.db-body{flex:1;min-width:0}
+.db-label{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px}
+.dash-banner.user .db-label{color:#1d4ed8}
+.dash-banner.national .db-label{color:#065f46}
+.db-title{font-size:15px;font-weight:800;color:#0f172a;letter-spacing:-.3px;margin-bottom:3px}
+.db-desc{font-size:12px;color:#4b5563;line-height:1.5}
+.db-arrow{font-size:20px;flex-shrink:0}
+.dash-banner.user .db-arrow{color:#2563eb}
+.dash-banner.national .db-arrow{color:#059669}
 .sb-user{display:flex;align-items:center;gap:10px;padding:8px 7px;border-radius:8px;cursor:pointer;white-space:nowrap;transition:background .13s}
 .sb-user:hover{background:#f3f4f6}
 .sb-av{width:26px;height:26px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff}
@@ -290,6 +339,7 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
 @media(max-width:900px){.features-grid{grid-template-columns:1fr 1fr}.stat-grid{grid-template-columns:1fr}}
 </style>
 <script src="./pdv.js"></script>
+<script type="module" src="https://gopang.net/auth/subsystem-auth.js"></script>
 </head>
 <body>
 <div class="app">
@@ -372,6 +422,29 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
     <span class="sb-lbl" style="color:var(--danger)">긴급 신고</span>
   </button>
 
+  <div class="sb-dash-links">
+    <button class="sb-dash-btn user" onclick="openUserDash()" title="사용자 교통·물류 대시보드">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span class="sb-dash-lbl">사용자 대시보드</span>
+      <span class="sb-dash-ext">↗</span>
+    </button>
+    <button class="sb-dash-btn national" onclick="openNationalDash()" title="국가 교통·물류 대시보드">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span class="sb-dash-lbl">국가 대시보드</span>
+      <span class="sb-dash-ext">↗</span>
+    </button>
+    <button class="sb-dash-btn realtime" onclick="openRealtimeBoard()" title="실시간 교통 상황판">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span class="sb-dash-lbl">실시간 상황판</span>
+      <span class="sb-dash-ext">↗</span>
+    </button>
+    <button class="sb-dash-btn" onclick="openWebApp()" title="모바일 웹앱" style="background:#fff7ed;color:#9a3412;border:1px solid #fed7aa">
+      <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      <span class="sb-dash-lbl">모바일 웹앱</span>
+      <span class="sb-dash-ext">↗</span>
+    </button>
+  </div>
+
   <div class="sb-foot">
     <a href="https://gopang.net" style="display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:8px;color:var(--txt3);transition:background .13s;overflow:hidden;white-space:nowrap;">
       <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
@@ -380,8 +453,8 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
     <div class="sb-user">
       <div class="sb-av">나</div>
       <div>
-        <div class="sb-uname">고팡 사용자</div>
-        <div class="sb-urole">PDV 연결됨</div>
+        <div class="sb-uname" id="sb-uname">고팡 사용자</div>
+        <div class="sb-urole">PDV 연결됨 · <span id="auth-badge" style="font-weight:700">미인증</span></div>
       </div>
     </div>
   </div>
@@ -394,6 +467,18 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
   <div class="topbar">
     <span class="topbar-title" id="topbar-title">홈</span>
     <div class="topbar-right">
+      <button class="btn-dash-user" onclick="openUserDash()">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        사용자 대시보드
+      </button>
+      <button class="btn-dash-national" onclick="openNationalDash()">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"/></svg>
+        국가 대시보드
+      </button>
+      <button class="btn-dash-realtime" onclick="openRealtimeBoard()">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        실시간 상황판
+      </button>
       <button class="btn-danger" onclick="show('emergency',null)">
         <svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         긴급
@@ -431,6 +516,54 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
         <div class="hstat"><span class="hstat-num">100<span class="u">%</span></span><span class="hstat-lbl">PDV 신원 인증</span></div>
         <div class="hstat"><span class="hstat-num">GDC</span><span class="hstat-lbl">자동 결제 · 즉시 정산</span></div>
       </div>
+    </div>
+
+    <!-- ══ 바로가기 배너 (2×2) ══ -->
+    <div class="dash-banner-grid">
+      <button class="dash-banner user" onclick="openUserDash()">
+        <div class="db-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="db-body">
+          <div class="db-label">사용자 교통·물류</div>
+          <div class="db-title">나의 이동·물류 대시보드</div>
+          <div class="db-desc">이동 이력 · 이송 물품 · 수단별 통계 · GDC 지출 · 일간/주간/월간/분기/연간</div>
+        </div>
+        <div class="db-arrow">→</div>
+      </button>
+      <button class="dash-banner national" onclick="openNationalDash()">
+        <div class="db-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <div class="db-body">
+          <div class="db-label">국가 교통·물류</div>
+          <div class="db-title">지역별 이동 현황 대시보드</div>
+          <div class="db-desc">시군구·읍면동 단위 · 5W1H 분석 · PDV 실시간 기록 · 안전·분쟁 현황</div>
+        </div>
+        <div class="db-arrow">→</div>
+      </button>
+      <button class="dash-banner realtime" onclick="openRealtimeBoard()">
+        <div class="db-icon">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="db-body">
+          <div class="db-label">Openhash L1–L5 · Kakao Maps</div>
+          <div class="db-title">실시간 교통 상황판</div>
+          <div class="db-desc">블랙박스 차량 위치 · 전국 환승 거점 · 릴레이 인수인계 · 수요 매칭 큐</div>
+        </div>
+        <div class="db-arrow">→</div>
+      </button>
+      <button class="dash-banner webapp" onclick="openWebApp()">
+        <div class="db-icon">
+          <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        </div>
+        <div class="db-body">
+          <div class="db-label">모바일 앱</div>
+          <div class="db-title">K-Traffic 모바일 웹앱</div>
+          <div class="db-desc">스마트폰 최적화 · 차량 탐색 · 탑승 요청 · 채팅 상담 · GDC 결제</div>
+        </div>
+        <div class="db-arrow">→</div>
+      </button>
     </div>
 
     <!-- 비교표 -->
@@ -941,7 +1074,7 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
       <div style="background:linear-gradient(135deg,#7f1d1d,#991b1b);border-radius:11px;padding:18px 20px;display:flex;align-items:center;gap:16px;margin-bottom:16px;color:#fff">
         <svg width="36" height="36" viewBox="0 0 24 24" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <div style="flex:1"><div style="font-size:16px;font-weight:800;margin-bottom:4px">즉시 112 · 현재 위치 & PDV 탑승 기록 자동 전송</div><div style="font-size:13px;opacity:.8">탑승 기록(운전자·차량번호·경로)이 경찰에 자동 공유됩니다.</div></div>
-        <button onclick="toast('🚨 112 연결 중… 현재 위치와 탑승 기록 전송 중')" style="background:#fff;color:#991b1b;border:none;border-radius:9px;padding:11px 20px;font-size:14px;font-weight:800;cursor:pointer">📞 112 연결</button>
+        <button onclick="emergencyReport()" style="background:#fff;color:#991b1b;border:none;border-radius:9px;padding:11px 20px;font-size:14px;font-weight:800;cursor:pointer">📞 112 연결</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:16px">
         <div class="card" style="margin:0"><div class="card-bd"><div style="font-size:22px;margin-bottom:8px;font-weight:800;color:var(--blue)">1</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">긴급 버튼 누르기</div><div style="font-size:12px;color:var(--txt2)">탑승 중 위험 감지 시 즉시 버튼을 누르세요.</div></div></div>
@@ -990,15 +1123,73 @@ function show(id, btn) {
 }
 
 /* AI 채팅 */
-const SYS = `당신은 K-Traffic AI 교통·물류 전문가입니다. 고팡 생태계 교통·물류 플랫폼에서 운영됩니다.
-핵심 원칙:
-1. 출발지·목적지를 파악하여 동선이 겹치는 차량을 탐색·추천
-2. 차량 유형(버스·택시·자가용·화물차) 통합 안내
-3. GDC 요금 사전 고지 — 완료 즉시 자동 이체
-4. 모든 기록은 양측 PDV에 암호화 저장됨을 안내
-5. 신원 미인증 차량은 추천하지 않음
-6. 긴급 상황 시 즉시 112 연결 안내
-제주도 지역에 특화되어 있으며, 한림읍·서귀포·성산·공항·항만 등 주요 거점을 잘 알고 있습니다.`;
+const PROXY_URL = 'https://gopang-proxy.tensor-city.workers.dev';
+
+const SYS = `당신은 K-Traffic의 핵심 AI 매칭 엔진입니다.
+고팡(Gopang) 생태계의 교통·물류 플랫폼에서 동작하며,
+신규 이동·물류 수요를 분석하여 기존 운행 중이거나 운행 예정인
+고팡 사용자(차량)를 하나 이상 조합해 최적의 동선을 구성합니다.
+
+[플랫폼 아키텍처]
+Openhash 계층: L1(읍면동)→L2(시군구)→L3(광역시도)→L4(국가)→L5(글로벌)
+탐색 원칙: 동선이 L1 이내이면 L2로 전달하지 않음. L2 이내이면 L3 전달 없음.
+고팡 블랙박스: 모든 차량이 1분 단위로 위치·동선을 Openhash L1 서버에 전송.
+PDV: 모든 거래는 양측 PDV에 암호화 기록. L1 미만 차량은 추천 제외.
+GDC: 기본요금 2 GDC(5km 이내), 추가 0.3 GDC/km. 완료 즉시 자동 이체.
+
+[역할]
+STEP 1. 수요 분석: 유형(이동/물류), 출발지, 목적지, 화물 종류·중량, 시간 조건, Openhash 레벨 판별
+STEP 2. 차량 탐색: 동선 겹침 + PDV L1 이상 + 적재 가능 차량 선정
+STEP 3. 릴레이 조합: 장거리는 중간 환승 거점(휴게소·터미널·물류센터)에서 복수 차량 조합
+STEP 4. 결과 제시: 수요자 요약 + 운전자별 수령·전달·인수인계 메시지 생성
+
+[응답 형식]
+① 사용자 요약: 매칭 차량, 예상 소요, GDC 요금
+② 운전자 메시지 블록 (차량별):
+  📍 수령 장소 / 📦 수령 물품 / 🏁 전달 장소 / 🔄 인수인계 / ⏰ 시간 / 💰 GDC / 🔐 PDV 기록
+
+[규칙]
+- 출발지·목적지 불명확 시 먼저 질문
+- 화물: 품목·수량·중량 확인, 위험물 거절
+- 운전자 성명은 성+○○으로 마스킹 (예: 김○○)
+- 차량 없을 시 솔직히 안내 후 운전자 모집 메시지 생성
+- 응답 끝에 수요 ID(DM-XXXX), Openhash 레벨, PDV 기록 예고 포함
+- 한국어로만 응답. 데스크톱 환경이므로 상세하게 작성 가능.
+
+[주요 환승 거점]
+경부고속도로: 죽전·안성·천안삼거리·금강·추풍령·칠곡
+영동: 여주·횡성·강릉 / 서해안: 행담도·서산·고창
+고속버스터미널: 서울강남·동서울·부산·대전·광주·대구
+물류센터: 이천·군포·부산신항·대전
+제주: 국제공항·제주항·한림항·제주도청·서귀포시청`;
+
+async function callAI(messages) {
+  // DeepSeek V3 Pro — gopang-proxy의 DEEPSEEK_API_KEY 사용
+  try {
+    const r = await fetch(`${PROXY_URL}/ai/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: 'deepseek',
+        model: 'deepseek-chat',
+        system: SYS,
+        messages: messages,
+        max_tokens: 2000,
+      }),
+    });
+    if (!r.ok) throw new Error(`proxy ${r.status}`);
+    const d = await r.json();
+    return d.content || '잠시 후 다시 시도해 주세요.';
+  } catch(e) {
+    console.warn('[K-Traffic] DeepSeek 폴백 → Claude:', e.message);
+    const r2 = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, system:SYS, messages:messages.slice(-10) }),
+    });
+    const d2 = await r2.json();
+    return d2.content?.find(c => c.type === 'text')?.text || '오류가 발생했습니다.';
+  }
+}
 
 let hist = [];
 async function chatSend() {
@@ -1012,16 +1203,10 @@ async function chatSend() {
   btn.disabled=true;
   const tid=addBubble('…','ai');
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:SYS,messages:hist.slice(-10)})
-    });
-    const d=await r.json();
-    const txt=d.content?.find(c=>c.type==='text')?.text||'잠시 후 다시 시도해 주세요.';
+    const txt = await callAI(hist.slice(-10));
     document.getElementById(tid)?.remove();
     addBubble(txt,'ai');
     hist.push({role:'assistant',content:txt});
-    // PDV 기록
     if (window.pdvWriteChat) window.pdvWriteChat(msg, txt);
   }catch{
     document.getElementById(tid)?.remove();
@@ -1046,12 +1231,68 @@ function searchVehicles(){
   const to=document.getElementById('req-to').value.trim();
   if(!from||!to){toast('출발지와 목적지를 입력해 주세요.');return;}
   toast('🔍 동선이 겹치는 차량을 탐색 중…');
+  // PDV: 이동 요청 기록
+  _sendPdvReport({
+    type:    'traffic_ride_request',
+    role:    'passenger',
+    label:   from,
+    summary: `이동 요청: ${from} → ${to}`,
+    goal:    '최적 교통 수단 탐색',
+  });
   setTimeout(()=>{document.getElementById('vehicle-results').style.display='block';toast('✅ 3개 차량을 찾았습니다!');},1200);
 }
 function requestRide(name){
   toast(`📨 ${name}에게 탑승 요청을 전송했습니다. PDV 신원 확인 후 수락을 기다립니다.`);
+  // PDV: 탑승 시작 기록
+  const from=document.getElementById('req-from')?.value.trim()||'출발지';
+  const to=document.getElementById('req-to')?.value.trim()||'목적지';
+  _sendPdvReport({
+    type:    'traffic_ride_start',
+    role:    'passenger',
+    label:   from,
+    summary: `탑승 요청: ${from} → ${to} | 운전자 ${name}`,
+    goal:    '탑승 기록 보관 및 범죄·분쟁 예방',
+  });
 }
 
+function emergencyReport(){
+  toast('🚨 112 연결 중… 현재 위치와 탑승 기록 전송 중');
+  _sendPdvReport({
+    type:    'traffic_emergency',
+    role:    'passenger',
+    label:   '긴급 신고',
+    summary: '긴급 신고: 112 연결 요청',
+    goal:    '범죄·사고 증거 보존 및 즉각 대응',
+  });
+}
+
+function openUserDash(){
+  toast('👤 사용자 교통·물류 대시보드로 이동합니다…');
+  setTimeout(()=>{
+    window.open('user-dashboard.html','_blank');
+  }, 300);
+}
+
+function openNationalDash(){
+  toast('🗺️ 국가 교통·물류 대시보드로 이동합니다…');
+  setTimeout(()=>{
+    window.open('national-dashboard.html','_blank');
+  }, 300);
+}
+
+function openRealtimeBoard(){
+  toast('📡 실시간 교통 상황판으로 이동합니다…');
+  setTimeout(()=>{
+    window.open('realtime-board.html','_blank');
+  }, 300);
+}
+
+function openWebApp(){
+  toast('📱 K-Traffic 모바일 웹앱으로 이동합니다…');
+  setTimeout(()=>{
+    window.open('webapp.html','_blank');
+  }, 300);
+}
 function closeModal(){document.getElementById('modal').classList.remove('open');}
 document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
 
@@ -1066,83 +1307,59 @@ if(ctx){show('chat',null);setTimeout(()=>qs(decodeURIComponent(ctx)),400);}
 </script>
 
 
-<!-- ══ PDV + SSO 통합 모듈 v2.0 ══ -->
-<script type="module">
-import { PDV } from './pdv.js';
-window.PDV = PDV;
+<!-- ══ K-Traffic 인증 + PDV 모듈 v3.0 ══ -->
+<script>
+/* subsystem-auth.js 콜백 — 인증 완료 시 호출 */
+window._onGopangAuth = function(user) {
+  console.log('[K-Traffic] ✅ 인증 완료 —', user.level, user.ipv6);
+  window._gopangUser = user;
 
-const _SSO_SESSION = 'gopang_sso_token';
-const _USER_STORE  = 'gopang_user_v3';
-
-function _getSession() {
-  try {
-    const s = JSON.parse(sessionStorage.getItem(_SSO_SESSION) || 'null');
-    if (s && s.exp && Date.now()/1000 < s.exp) return s;
-  } catch {}
-  return null;
-}
-
-function _getLocalUser() {
-  try { return JSON.parse(localStorage.getItem(_USER_STORE) || 'null'); }
-  catch { return null; }
-}
-
-function _renderAuthBadge(session) {
-  const el = document.getElementById('auth-badge');
-  if (!el) return;
-  if (!session) { el.textContent = '미인증'; el.style.color = '#9ca3af'; return; }
-  const colors = { L0:'#9ca3af', L1:'#22d3ee', L2:'#3ecf8e', L3:'#f59e0b' };
-  el.textContent = session.level || 'L0';
-  el.style.color  = colors[session.level] || colors.L0;
-  el.title        = session.ipv6 || '';
-}
-
-async function _initAuth() {
-  /* 1. gwp_token URL 파라미터 처리 (gopang-sso.js 경로1 동일) */
-  const params = new URLSearchParams(location.search);
-  if (params.get('gwp') === '1' && params.get('gwp_token')) {
-    try {
-      const raw     = params.get('gwp_token').replace(/-/g,'+').replace(/_/g,'/');
-      const decoded = JSON.parse(atob(raw + '=='.slice((raw.length%4)||4)));
-      const payload = decoded.payload || decoded;
-      if (payload && payload.exp && Date.now()/1000 < payload.exp) {
-        sessionStorage.setItem(_SSO_SESSION, JSON.stringify({
-          ipv6: payload.ipv6, level: payload.level, exp: payload.exp
-        }));
-      }
-    } catch(e) { console.warn('[Auth] gwp_token 파싱 오류:', e.message); }
-    const clean = new URL(location.href);
-    ['gwp','gwp_token','origin','ctx'].forEach(k => clean.searchParams.delete(k));
-    history.replaceState({}, '', clean.toString());
+  /* 인증 배지 업데이트 */
+  const badge = document.getElementById('auth-badge');
+  if (badge) {
+    const colors = { L0:'#9ca3af', L1:'#22d3ee', L2:'#3ecf8e', L3:'#f59e0b' };
+    badge.textContent = user.level || 'L0';
+    badge.style.color = colors[user.level] || colors.L0;
+    badge.title       = user.ipv6 || '';
+  }
+  const uname = document.getElementById('sb-uname');
+  if (uname && user.ipv6) {
+    uname.textContent = user.ipv6.slice(0, 14) + '…';
   }
 
-  /* 2. 세션 캐시 확인 */
-  let session = _getSession();
-
-  /* 3. gopang_user_v3 로컬스토어 폴백 (auth.js _localFallback 동일) */
-  if (!session) {
-    const user = _getLocalUser();
-    if (user && user.ipv6) {
-      const exp = Math.floor(Date.now()/1000) + 3600;
-      session   = { ipv6: user.ipv6, level: user.authLevel || 'L0', exp };
-      sessionStorage.setItem(_SSO_SESSION, JSON.stringify(session));
-    }
-  }
-
-  _renderAuthBadge(session);
-  return session;
-}
-
-/* 채팅 완료 후 PDV 기록 훅 */
-window.pdvWriteChat = async function(msg, txt) {
-  try {
-    await PDV.writeRideRequest({ from: _extractFrom(msg), to: _extractTo(msg) });
-  } catch(e) {
-    console.warn('[PDV] 기록 오류:', e.message);
-  }
+  /* 대기 중 PDV 재전송 */
+  if (window.PDV && PDV.flushPending) setTimeout(PDV.flushPending, 2000);
 };
 
-/* K-Traffic 유틸 */
+/* ── PDV 공통 전송 함수 ── */
+async function _sendPdvReport(action) {
+  const user = window._gopangUser;
+  if (!user?.ipv6) return;
+  try {
+    await fetch('https://gopang-proxy.tensor-city.workers.dev/pdv/report', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ report: {
+        svc:   'traffic',
+        type:  action.type || 'action',
+        who:   { ipv6: user.ipv6, role: action.role || 'user', recipients: ['gopang-pdv'] },
+        when:  { generated_at: new Date().toISOString(),
+                 period_start: new Date().toISOString(),
+                 period_end:   new Date().toISOString() },
+        where: { svc_url: 'https://traffic.gopang.net', label: action.label || location.pathname },
+        what:  { summary: action.summary },
+        how:   { method: 'subsystem-auth', auth_level: user.level || 'L0' },
+        why:   { goal: action.goal || 'K-Traffic 서비스 이용' },
+      }}),
+    });
+    console.log('[K-Traffic] ✅ PDV 전송 완료:', action.summary);
+  } catch(e) {
+    console.warn('[K-Traffic] PDV 전송 실패:', e.message);
+  }
+}
+window._sendPdvReport = _sendPdvReport;
+
+/* ── K-Traffic 유틸 ── */
 window._extractFrom = function(msg) {
   const m = msg.match(/([가-힣]{2,}(?:읍|동|면|리|로|길)?)\s*(?:에서|출발|부터|→)/);
   return m ? m[1] : '출발지';
@@ -1152,21 +1369,18 @@ window._extractTo = function(msg) {
   return m ? m[1] : '목적지';
 };
 
-/* K-Public 유틸 */
-window._classifyRequest = function(msg) {
-  if (/등본|초본|인감|증명서/.test(msg))  return 'civil';
-  if (/허가|신고|등록/.test(msg))          return 'permit';
-  if (/파손|누수|고장|불법/.test(msg))     return 'report';
-  if (/복지|지원금|급여/.test(msg))        return 'welfare';
-  if (/세금|과태료|납부/.test(msg))        return 'tax';
-  return 'general';
+/* ── 채팅 완료 후 PDV 기록 훅 ── */
+window.pdvWriteChat = async function(msg, txt) {
+  const from = window._extractFrom(msg);
+  const to   = window._extractTo(msg);
+  await _sendPdvReport({
+    type:    'traffic_ride_request',
+    role:    'passenger',
+    label:   from,
+    summary: `이동 상담: ${from} → ${to}`,
+    goal:    '최적 교통 수단 탐색',
+  });
 };
-
-/* 초기화 */
-document.addEventListener('DOMContentLoaded', async () => {
-  await _initAuth();
-  if (PDV && PDV.flushPending) setTimeout(PDV.flushPending, 2000);
-});
 </script>
 
 </body>

@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K-Traffic — 사용자 교통·물류 대시보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Inter',sans-serif;font-size:13px;line-height:1.5;color:#1a1a1a;background:#fff;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none}
+
+:root{
+  --green:#3ecf8e;
+  --green-dk:#2bb37a;
+  --green-bg:#f0fdf9;
+  --green-border:#a7f3d0;
+  --border:#e5e7eb;
+  --border2:#d1d5db;
+  --bg:#ffffff;
+  --bg2:#f9fafb;
+  --bg3:#f3f4f6;
+  --txt1:#1a1a1a;
+  --txt2:#6b7280;
+  --txt3:#9ca3af;
+  --sb-w:48px;
+  --sb-open:220px;
+  --red:#ef4444;
+  --red-bg:#fef2f2;
+  --amber:#f59e0b;
+  --amber-bg:#fffbeb;
+  --blue:#3b82f6;
+  --blue-bg:#eff6ff;
+  --purple:#8b5cf6;
+  --purple-bg:#f5f3ff;
+}
+
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* ══ SIDEBAR ══ */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;z-index:200;
+  width:var(--sb-w);background:var(--bg);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+  transition:width .18s ease;
+}
+.sidebar:hover{width:var(--sb-open)}
+.sb-inner{width:var(--sb-open);flex:1;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.sb-inner::-webkit-scrollbar{display:none}
+
+.sb-top{height:48px;flex-shrink:0;display:flex;align-items:center;padding:0 12px;gap:10px;border-bottom:1px solid var(--border)}
+.sb-logo-icon{width:24px;height:24px;border-radius:5px;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-logo-icon svg{width:13px;height:13px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sb-logo-text{font-size:13px;font-weight:600;color:var(--txt1);white-space:nowrap;opacity:0;transition:opacity .12s}
+.sidebar:hover .sb-logo-text{opacity:1}
+
+.sb-section{padding:20px 0 4px 12px;font-size:11px;font-weight:600;color:var(--txt3);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;opacity:0;transition:opacity .12s;height:32px;display:flex;align-items:flex-end}
+.sidebar:hover .sb-section{opacity:1}
+
+.sb-item{
+  display:flex;align-items:center;height:34px;padding:0 10px;margin:1px 6px;
+  border-radius:6px;color:var(--txt2);cursor:pointer;white-space:nowrap;
+  transition:background .12s,color .12s;font-size:13px;font-weight:400;position:relative;
+}
+.sb-item:hover{background:var(--bg3);color:var(--txt1)}
+.sb-item.active{background:var(--bg3);color:var(--txt1);font-weight:500}
+.sb-item.active::before{content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);width:2px;height:16px;background:var(--green);border-radius:0 2px 2px 0}
+.sb-icon{width:16px;height:16px;flex:0 0 16px;display:flex;align-items:center;justify-content:center}
+.sb-icon svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sb-lbl{opacity:0;transition:opacity .12s;margin-left:10px;white-space:nowrap}
+.sidebar:hover .sb-lbl{opacity:1}
+
+.sb-dash-group{padding:6px 6px;border-top:1px solid var(--border);margin-top:auto;flex-shrink:0;width:var(--sb-open)}
+.sb-dash-item{
+  display:flex;align-items:center;height:32px;padding:0 10px;margin:2px 0;
+  border-radius:6px;cursor:pointer;white-space:nowrap;font-size:12px;font-weight:500;
+  transition:background .12s;
+}
+.sb-dash-item.user{color:#1d6f4e;background:var(--green-bg);border:1px solid var(--green-border)}
+.sb-dash-item.user:hover{background:#dcfce7}
+.sb-dash-item.national{color:var(--txt2);background:var(--blue-bg)}
+.sb-dash-item.national:hover{background:#dbeafe}
+.sb-dash-item svg{width:13px;height:13px;stroke:currentColor;stroke-width:1.8;fill:none;flex-shrink:0}
+.sb-dash-lbl{opacity:0;transition:opacity .12s;margin-left:8px;flex:1}
+.sb-dash-ext{opacity:0;transition:opacity .12s;font-size:10px;color:var(--txt3)}
+.sidebar:hover .sb-dash-lbl,.sidebar:hover .sb-dash-ext{opacity:1}
+
+.sb-foot{border-top:1px solid var(--border);padding:8px 6px;flex-shrink:0;width:var(--sb-open)}
+.sb-user-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:background .12s}
+.sb-user-row:hover{background:var(--bg3)}
+.sb-avatar{width:28px;height:28px;border-radius:50%;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#1d6f4e;flex-shrink:0}
+.sb-uname{font-size:12px;font-weight:500;color:var(--txt1);opacity:0;transition:opacity .12s}
+.sb-urole{font-size:10px;color:var(--txt3);opacity:0;transition:opacity .12s}
+.sidebar:hover .sb-uname,.sidebar:hover .sb-urole{opacity:1}
+
+/* ══ MAIN ══ */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;margin-left:var(--sb-w)}
+
+/* ══ TOPBAR ══ */
+.topbar{
+  height:48px;flex-shrink:0;background:var(--bg);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:10px;
+}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt3)}
+.breadcrumb a{color:var(--green-dk);cursor:pointer}
+.breadcrumb a:hover{text-decoration:underline}
+.breadcrumb-sep{font-size:11px;color:var(--txt3)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+
+.period-tabs{display:flex;background:var(--bg3);border-radius:5px;padding:2px;gap:1px;border:1px solid var(--border)}
+.period-tab{padding:3px 10px;border-radius:4px;font-size:11px;font-weight:500;color:var(--txt3);cursor:pointer;transition:all .12s;font-family:'Inter',sans-serif;border:none;background:none}
+.period-tab.active{background:var(--bg);color:var(--txt1);box-shadow:0 0 0 1px var(--border)}
+.period-tab:hover:not(.active){color:var(--txt1)}
+
+.btn-national{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:5px;font-size:12px;font-weight:500;color:#1d4ed8;border:1px solid #bfdbfe;background:var(--blue-bg);cursor:pointer;white-space:nowrap}
+.btn-national:hover{background:#dbeafe}
+.btn-national svg{width:12px;height:12px;stroke:currentColor;stroke-width:2;fill:none}
+
+/* ══ CONTENT ══ */
+.content{flex:1;overflow-y:auto;background:var(--bg2);padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+
+/* ══ PROFILE HEADER ══ */
+.profile-card{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px 16px}
+.profile-row{display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#1d6f4e;flex-shrink:0}
+.profile-name{font-size:14px;font-weight:600;color:var(--txt1)}
+.profile-meta{display:flex;align-items:center;gap:8px;margin-top:2px;flex-wrap:wrap}
+.pdv-chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:500;padding:1px 6px;border-radius:3px;background:var(--blue-bg);color:#1d4ed8;border:1px solid #bfdbfe}
+.pdv-chip::before{content:'';width:4px;height:4px;border-radius:50%;background:#3b82f6}
+.mono-sm{font-family:'SF Mono','Fira Code',monospace;font-size:10px;color:var(--txt3)}
+
+.profile-stats{display:flex;gap:8px;margin-left:auto}
+.pstat{text-align:center;padding:6px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:5px}
+.pstat-val{font-size:16px;font-weight:600;color:var(--txt1);line-height:1.1}
+.pstat-lbl{font-size:10px;color:var(--txt3);margin-top:1px}
+
+/* ══ KPI GRID ══ */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:10px 12px}
+.kpi-lbl{font-size:11px;color:var(--txt3);margin-bottom:2px}
+.kpi-val{font-size:17px;font-weight:600;color:var(--txt1);line-height:1.1}
+.kpi-sub{font-size:10px;color:var(--txt3);margin-top:2px}
+
+/* ══ TWO-COL / THREE-COL ══ */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* ══ CARD ══ */
+.card{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px 16px;overflow:hidden}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.ch-label{font-size:11px;font-weight:600;color:var(--txt3);letter-spacing:.04em;text-transform:uppercase;flex:1}
+.ch-meta{font-size:11px;color:var(--txt3)}
+.ch-badge{font-size:10px;font-weight:500;padding:1px 6px;border-radius:3px;background:var(--green-bg);color:#1d6f4e;border:1px solid var(--green-border)}
+
+/* ══ TABLE ══ */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{padding:0 8px 6px 0;font-size:11px;font-weight:500;color:var(--txt3);text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl th:last-child{text-align:right;padding-right:0}
+.tbl td{padding:6px 8px 6px 0;border-bottom:1px solid var(--border);color:var(--txt1);vertical-align:middle}
+.tbl td:last-child{text-align:right;padding-right:0}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--bg2)}
+
+/* ══ MODE BARS ══ */
+.mode-row{margin-bottom:9px}
+.mode-head{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.mode-name{font-weight:500;color:var(--txt1)}
+.mode-right{color:var(--txt3)}
+.bar-track{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;border:1px solid var(--border)}
+.bar-fill{height:100%;border-radius:2px}
+
+.seg-bar{height:10px;border-radius:3px;overflow:hidden;display:flex;margin-top:8px}
+.seg-seg{height:100%}
+
+/* ══ CARGO ══ */
+.cargo-item{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+.cargo-item:last-child{border-bottom:none}
+.cargo-icon{width:26px;height:26px;border-radius:5px;background:var(--amber-bg);border:1px solid #fde68a;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cargo-icon svg{width:13px;height:13px;stroke:#92400e;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.cargo-name{font-size:12px;font-weight:500}
+.cargo-sub{font-size:10px;color:var(--txt3);margin-top:1px}
+.status-done{font-size:10px;font-weight:500;padding:1px 6px;border-radius:3px;background:var(--green-bg);color:#1d6f4e;border:1px solid var(--green-border)}
+.status-ing{font-size:10px;font-weight:500;padding:1px 6px;border-radius:3px;background:var(--amber-bg);color:#92400e;border:1px solid #fde68a}
+
+/* ══ CHART WRAPPER ══ */
+.chart-wrap{position:relative;width:100%}
+
+/* ══ DIST BARS ══ */
+.dist-row{margin-bottom:7px}
+.dist-head{display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px}
+.dist-lbl{color:var(--txt2)}
+.dist-ct{font-weight:500}
+
+/* ══ HOUR GRID ══ */
+.hour-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:2px}
+.hour-bar{display:flex;flex-direction:column;align-items:center;gap:2px}
+.hour-fill{width:100%;border-radius:2px 2px 0 0}
+.hour-lbl{font-size:9px;color:var(--txt3)}
+
+/* ══ GDC BREAKDOWN ══ */
+.gdc-row{margin-bottom:7px}
+.gdc-head{display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px}
+.gdc-lbl{color:var(--txt2)}
+.gdc-amt{font-weight:500;color:#92400e}
+
+/* ══ HISTORY TABLE ══ */
+.hist-tbl{width:100%;border-collapse:collapse;font-size:11px;min-width:600px}
+.hist-tbl th{padding:0 8px 6px 0;font-size:10px;font-weight:500;color:var(--txt3);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+.hist-tbl td{padding:6px 8px 6px 0;border-bottom:1px solid var(--border);vertical-align:middle}
+.hist-tbl tr:last-child td{border-bottom:none}
+.hist-tbl tr:hover td{background:var(--bg2)}
+.mono{font-family:'SF Mono','Fira Code',monospace;font-size:10px;color:var(--txt3)}
+.arrow-cell{color:var(--txt3);font-size:10px;padding:0 2px !important}
+
+/* ══ TYPE CHIP ══ */
+.chip{font-size:10px;font-weight:500;padding:1px 6px;border-radius:3px;border:1px solid;white-space:nowrap}
+
+/* ══ SCROLL ══ */
+.scroll-x{overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.scroll-x::-webkit-scrollbar{height:3px}
+.scroll-x::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.scroll-y{max-height:200px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.scroll-y::-webkit-scrollbar{width:3px}
+.scroll-y::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ══ GDC BALANCE ══ */
+.gdc-balance-row{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+
+/* ══ TOAST ══ */
+.toast{position:fixed;bottom:20px;right:20px;z-index:9999;background:var(--txt1);color:#fff;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:500;opacity:0;transform:translateY(6px);transition:all .2s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ══ STAT SUMMARY ══ */
+.sum-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border)}
+.sum-row:last-child{border-bottom:none}
+.sum-lbl{color:var(--txt3)}
+.sum-val{font-weight:500}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+<div class="sb-inner">
+
+  <div class="sb-top">
+    <div class="sb-logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+    </div>
+    <span class="sb-logo-text">K-Traffic</span>
+  </div>
+
+  <div class="sb-section">나의 이동</div>
+
+  <div class="sb-item active" onclick="setActive(this)">
+    <span class="sb-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+    <span class="sb-lbl">대시보드</span>
+  </div>
+
+  <div class="sb-item" onclick="setActive(this)">
+    <span class="sb-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+    <span class="sb-lbl">이동 이력</span>
+  </div>
+
+  <div class="sb-item" onclick="setActive(this)">
+    <span class="sb-icon"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span>
+    <span class="sb-lbl">물류·배송</span>
+  </div>
+
+  <div class="sb-section">결제</div>
+
+  <div class="sb-item" onclick="setActive(this)">
+    <span class="sb-icon"><svg viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 0 1-2-2 2 2 0 0 1 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/></svg></span>
+    <span class="sb-lbl">GDC 지갑</span>
+  </div>
+
+  <div class="sb-item" onclick="setActive(this)">
+    <span class="sb-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+    <span class="sb-lbl">PDV 기록</span>
+  </div>
+
+  <div class="sb-section">설정</div>
+
+  <div class="sb-item" onclick="setActive(this)">
+    <span class="sb-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></span>
+    <span class="sb-lbl">설정</span>
+  </div>
+
+  <!-- 대시보드 바로가기 -->
+  <div class="sb-dash-group">
+    <div class="sb-dash-item user" onclick="toast_show('이미 사용자 대시보드입니다.')">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span class="sb-dash-lbl">사용자 대시보드</span>
+      <span class="sb-dash-ext">●</span>
+    </div>
+    <div class="sb-dash-item national" onclick="openNationalDash()">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="sb-dash-lbl">국가 대시보드</span>
+      <span class="sb-dash-ext">↗</span>
+    </div>
+  </div>
+
+  <div class="sb-foot">
+    <a href="https://gopang.net" style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:5px;color:var(--txt3);font-size:12px;transition:background .12s;white-space:nowrap">
+      <svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span class="sb-uname">← 고팡으로</span>
+    </a>
+    <div class="sb-user-row">
+      <div class="sb-avatar" id="sb-av">박</div>
+      <div>
+        <div class="sb-uname" id="sb-uname">박○○</div>
+        <div class="sb-urole">PDV L1 · <span id="auth-badge">미인증</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="breadcrumb">
+      <a onclick="openNationalDash()">국가 대시보드</a>
+      <span class="breadcrumb-sep">›</span>
+      <span style="color:var(--txt1);font-weight:500">사용자 대시보드</span>
+    </div>
+    <div class="topbar-right">
+      <div class="period-tabs">
+        <button class="period-tab active" onclick="setPeriod('day',this)">일간</button>
+        <button class="period-tab" onclick="setPeriod('week',this)">주간</button>
+        <button class="period-tab" onclick="setPeriod('month',this)">월간</button>
+        <button class="period-tab" onclick="setPeriod('quarter',this)">분기</button>
+        <button class="period-tab" onclick="setPeriod('year',this)">연간</button>
+      </div>
+      <button class="btn-national" onclick="openNationalDash()">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        국가 대시보드 ↗
+      </button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- PROFILE CARD -->
+    <div class="profile-card">
+      <div class="profile-row">
+        <div class="avatar">박</div>
+        <div>
+          <div class="profile-name">박○○</div>
+          <div class="profile-meta">
+            <span class="mono-sm">2601:a4b:…c9f0</span>
+            <span class="pdv-chip">PDV L1</span>
+            <span style="font-size:10px;color:var(--txt3)">가입 2024.03.15</span>
+          </div>
+        </div>
+        <div class="profile-stats">
+          <div class="pstat">
+            <div class="pstat-val" style="color:#1d4ed8" id="score-val">4.92</div>
+            <div class="pstat-lbl">신뢰 점수</div>
+          </div>
+          <div class="pstat">
+            <div class="pstat-val" style="color:#1d6f4e" id="trips-total">247</div>
+            <div class="pstat-lbl">총 이동 횟수</div>
+          </div>
+          <div class="pstat">
+            <div class="pstat-val" style="color:#92400e" id="gdc-total">2,847</div>
+            <div class="pstat-lbl">총 GDC 사용</div>
+          </div>
+        </div>
+      </div>
+      <div class="kpi-grid" id="kpi-grid"></div>
+    </div>
+
+    <!-- ROW 2: 수단 + 물품 -->
+    <div class="row2">
+
+      <div class="card">
+        <div class="card-head">
+          <span class="ch-label">이동 수단별 이력</span>
+          <span class="ch-meta" id="mode-period">오늘</span>
+        </div>
+        <div id="mode-list"></div>
+        <div style="margin-top:10px">
+          <div style="font-size:11px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">수단 비중</div>
+          <div class="seg-bar" id="mode-seg"></div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px" id="mode-legend"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="ch-label">이송 물품 이력</span>
+          <span class="ch-meta" id="cargo-period">오늘</span>
+        </div>
+        <div id="cargo-list"></div>
+      </div>
+
+    </div>
+
+    <!-- 추이 차트 -->
+    <div class="card">
+      <div class="card-head">
+        <span class="ch-label">기간별 이동·물류 추이</span>
+        <span class="ch-meta">최근 12개월</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px" id="trend-legend"></div>
+      <div class="chart-wrap" style="height:150px">
+        <canvas id="trend-chart" role="img" aria-label="월별 이동 건수 및 GDC 지출 추이">월별 이동 및 GDC 추이</canvas>
+      </div>
+    </div>
+
+    <!-- ROW 3: 거리 + 시간대 + GDC -->
+    <div class="row3">
+
+      <div class="card">
+        <div class="card-head"><span class="ch-label">이동 거리 분포</span></div>
+        <div id="dist-list"></div>
+        <div style="margin-top:10px">
+          <div class="sum-row"><span class="sum-lbl">평균 거리</span><span class="sum-val">14.2km</span></div>
+          <div class="sum-row"><span class="sum-lbl">총 누적 거리</span><span class="sum-val">3,512km</span></div>
+          <div class="sum-row"><span class="sum-lbl">최장 단일</span><span class="sum-val">84km</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span class="ch-label">시간대별 이용 패턴</span></div>
+        <div id="hour-top" class="hour-grid" style="margin-bottom:8px"></div>
+        <div id="hour-bot" class="hour-grid"></div>
+        <div style="margin-top:8px;font-size:11px;color:var(--txt3)">피크: <span style="font-weight:500;color:var(--txt1)" id="peak-lbl">17시</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span class="ch-label">GDC 지출 분류</span></div>
+        <div id="gdc-list"></div>
+        <div class="gdc-balance-row">
+          <span style="font-size:11px;color:var(--txt3)">현재 잔액</span>
+          <div style="text-align:right">
+            <div style="font-size:18px;font-weight:600;color:#1d4ed8">247.5 <span style="font-size:12px;color:var(--txt3)">GDC</span></div>
+            <div style="font-size:10px;color:var(--txt3)">≈ ₩247,500</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PDV 상세 기록 -->
+    <div class="card">
+      <div class="card-head">
+        <span class="ch-label">PDV 이동·물류 상세 기록</span>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <select style="height:26px;padding:0 8px;font-size:11px;border-radius:4px;border:1px solid var(--border2);background:var(--bg);color:var(--txt1);font-family:'Inter',sans-serif" onchange="filterHistory(this.value)">
+            <option value="all">전체</option>
+            <option value="ride">이동</option>
+            <option value="cargo">물류</option>
+          </select>
+        </div>
+      </div>
+      <div class="scroll-x">
+        <table class="hist-tbl">
+          <thead>
+            <tr>
+              <th>PDV ID</th>
+              <th>일시</th>
+              <th>유형</th>
+              <th>출발 읍면동</th>
+              <th></th>
+              <th>도착 읍면동</th>
+              <th>수단·물품</th>
+              <th>거리</th>
+              <th>소요</th>
+              <th>GDC</th>
+              <th>평가</th>
+              <th>PDV</th>
+            </tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const PERIODS={
+  day:    {label:'오늘',trips:3,dist:'38.4km',gdc:29,cargo:'1건',time:'52분'},
+  week:   {label:'이번 주',trips:18,dist:'214km',gdc:164,cargo:'4건',time:'5시간 12분'},
+  month:  {label:'이번 달',trips:74,dist:'891km',gdc:682,cargo:'11건',time:'21시간 8분'},
+  quarter:{label:'이번 분기',trips:198,dist:'2,418km',gdc:1840,cargo:'28건',time:'56시간 40분'},
+  year:   {label:'올해',trips:247,dist:'3,512km',gdc:2847,cargo:'38건',time:'72시간 15분'},
+};
+const KPI=[
+  {key:'trips',label:'이동 횟수',unit:'회',color:'#1d6f4e'},
+  {key:'dist',label:'총 이동 거리',unit:'',color:'#5b21b6'},
+  {key:'gdc',label:'GDC 지출',unit:'',color:'#92400e'},
+  {key:'cargo',label:'물류 건수',unit:'',color:'#1d4ed8'},
+  {key:'time',label:'이동 총 시간',unit:'',color:'#991b1b'},
+];
+const MODE_D={
+  day:    [{name:'자가용 공유',n:2,gdc:17,pct:67},{name:'버스',n:1,gdc:2,pct:33}],
+  week:   [{name:'자가용 공유',n:9,gdc:82,pct:50},{name:'택시',n:5,gdc:60,pct:28},{name:'버스',n:4,gdc:8,pct:22}],
+  month:  [{name:'자가용 공유',n:32,gdc:312,pct:43},{name:'택시',n:24,gdc:280,pct:32},{name:'버스',n:14,gdc:28,pct:19},{name:'화물차',n:4,gdc:62,pct:6}],
+  quarter:[{name:'자가용 공유',n:88,gdc:860,pct:44},{name:'택시',n:63,gdc:740,pct:32},{name:'버스',n:35,gdc:70,pct:18},{name:'화물차',n:12,gdc:170,pct:6}],
+  year:   [{name:'자가용 공유',n:108,gdc:1050,pct:44},{name:'택시',n:79,gdc:935,pct:32},{name:'버스',n:44,gdc:88,pct:18},{name:'화물차',n:16,gdc:224,pct:6}],
+};
+const MODE_COLOR={'자가용 공유':'#3b82f6','택시':'#f97316','버스':'#3ecf8e','화물차':'#f59e0b','오토바이':'#8b5cf6'};
+const CARGO_D={
+  day:   [{item:'소형 택배 (2kg)',from:'한림읍',to:'연동',gdc:8,status:'완료'}],
+  week:  [{item:'소형 택배 (2kg)',from:'한림읍',to:'연동',gdc:8,status:'완료'},{item:'중형 가전 (18kg)',from:'노형동',to:'서귀포',gdc:28,status:'완료'},{item:'서류 봉투',from:'이도2동',to:'도청',gdc:4,status:'완료'},{item:'식품 박스 (5kg)',from:'애월읍',to:'한림읍',gdc:6,status:'배송 중'}],
+  month: [{item:'소형 택배 (2kg)',from:'한림읍',to:'연동',gdc:8,status:'완료'},{item:'중형 가전 (18kg)',from:'노형동',to:'서귀포',gdc:28,status:'완료'},{item:'사무용 가구 (80kg)',from:'제주시청',to:'노형동',gdc:55,status:'완료'},{item:'의류 박스 (12kg)',from:'이도2동',to:'성산읍',gdc:18,status:'완료'},{item:'전자기기 (8kg)',from:'연동',to:'서귀포',gdc:22,status:'완료'}],
+  quarter:[],year:[],
+};
+const DIST=[
+  {label:'5km 미만',count:42,color:'#dbeafe',tc:'#1d4ed8'},
+  {label:'5–15km',count:98,color:'#bfdbfe',tc:'#1d4ed8'},
+  {label:'15–30km',count:68,color:'#3b82f6',tc:'#1d4ed8'},
+  {label:'30–60km',count:28,color:'#1d4ed8',tc:'#1d4ed8'},
+  {label:'60km 초과',count:11,color:'#1e3a8a',tc:'#1d4ed8'},
+];
+const HOUR=[7,18,42,65,38,22,15,12,8,6,5,4,3,8,22,35,58,82,74,45,30,18,10,5];
+const GDC_D=[
+  {label:'이동 (승차)',pct:62,amt:1765,color:'#3b82f6'},
+  {label:'물류·배송',pct:25,amt:712,color:'#f59e0b'},
+  {label:'긴급·추가',pct:8,amt:228,color:'#f97316'},
+  {label:'기타',pct:5,amt:142,color:'#9ca3af'},
+];
+const HISTORY=[
+  {id:'RPT-24810',dt:'2026.06.03 09:28',type:'ride',from:'한림읍 한림로',to:'문연로 (도청)',mode:'자가용 공유',item:'—',dist:'22.1km',dur:'38분',gdc:8,score:5,level:'L1'},
+  {id:'RPT-24807',dt:'2026.06.03 08:55',type:'cargo',from:'한림읍 귀덕리',to:'연동 물류센터',mode:'화물차',item:'소형 택배 2kg',dist:'18.4km',dur:'31분',gdc:8,score:4.8,level:'L1'},
+  {id:'RPT-24790',dt:'2026.06.02 17:42',type:'ride',from:'제주도청',to:'노형동',mode:'택시',item:'—',dist:'8.3km',dur:'18분',gdc:12,score:5,level:'L1'},
+  {id:'RPT-24775',dt:'2026.06.02 09:10',type:'ride',from:'한림읍',to:'이도2동',mode:'버스',item:'—',dist:'19.2km',dur:'45분',gdc:2,score:5,level:'L0'},
+  {id:'RPT-24741',dt:'2026.06.01 14:22',type:'cargo',from:'노형동',to:'서귀포시청',mode:'화물차',item:'중형 가전 18kg',dist:'44.6km',dur:'58분',gdc:28,score:4.9,level:'L1'},
+  {id:'RPT-24720',dt:'2026.05.31 09:28',type:'ride',from:'한림읍',to:'도청',mode:'자가용 공유',item:'—',dist:'22.1km',dur:'38분',gdc:8,score:5,level:'L1'},
+  {id:'RPT-24698',dt:'2026.05.30 18:05',type:'ride',from:'도청',to:'한림읍',mode:'택시',item:'—',dist:'22.4km',dur:'40분',gdc:14,score:4.7,level:'L1'},
+  {id:'RPT-24650',dt:'2026.05.29 08:40',type:'ride',from:'한림읍',to:'공항',mode:'자가용 공유',item:'—',dist:'28.7km',dur:'42분',gdc:18,score:5,level:'L1'},
+];
+const TC={
+  '자가용 공유':{bg:'#eff6ff',tc:'#1d4ed8',bc:'#bfdbfe'},
+  '택시':{bg:'#fff7ed',tc:'#9a3412',bc:'#fed7aa'},
+  '버스':{bg:'#f0fdf9',tc:'#1d6f4e',bc:'#a7f3d0'},
+  '화물차':{bg:'#fffbeb',tc:'#92400e',bc:'#fde68a'},
+};
+const LC={'L0':{bg:'#f9fafb',tc:'#6b7280',bc:'#e5e7eb'},'L1':{bg:'#eff6ff',tc:'#1d4ed8',bc:'#bfdbfe'},'L2':{bg:'#f0fdf9',tc:'#1d6f4e',bc:'#a7f3d0'}};
+
+const MONTHS=['25.07','25.08','25.09','25.10','25.11','25.12','26.01','26.02','26.03','26.04','26.05','26.06'];
+const M_TRIPS=[14,16,18,15,20,22,17,19,24,21,28,22];
+const M_GDC=[108,124,140,118,158,172,132,146,186,162,218,170];
+
+let curPeriod='day';
+let tChart=null;
+
+function setPeriod(p,btn){
+  curPeriod=p;
+  document.querySelectorAll('.period-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+}
+
+function renderKpi(){
+  const d=PERIODS[curPeriod];
+  document.getElementById('kpi-grid').innerHTML=KPI.map(k=>`
+    <div class="kpi">
+      <div class="kpi-lbl">${k.label}</div>
+      <div class="kpi-val" style="color:${k.color}">${d[k.key]}${k.unit}</div>
+      <div class="kpi-sub">${d.label}</div>
+    </div>`).join('');
+}
+
+function renderModes(){
+  const data=MODE_D[curPeriod];
+  const mx=Math.max(...data.map(d=>d.n));
+  document.getElementById('mode-period').textContent=PERIODS[curPeriod].label;
+  document.getElementById('mode-list').innerHTML=data.map(m=>`
+    <div class="mode-row">
+      <div class="mode-head">
+        <span class="mode-name">${m.name}</span>
+        <span class="mode-right">${m.n}회 · ${m.gdc} GDC</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(m.n/mx*100)}%;background:${MODE_COLOR[m.name]||'#9ca3af'}"></div></div>
+    </div>`).join('');
+  document.getElementById('mode-seg').innerHTML=data.map(m=>`
+    <div class="seg-seg" style="width:${m.pct}%;background:${MODE_COLOR[m.name]||'#9ca3af'}"></div>`).join('');
+  document.getElementById('mode-legend').innerHTML=data.map(m=>`
+    <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--txt3)">
+      <span style="width:7px;height:7px;border-radius:2px;background:${MODE_COLOR[m.name]||'#9ca3af'}"></span>
+      ${m.name} ${m.pct}%
+    </span>`).join('');
+}
+
+function renderCargo(){
+  const data=CARGO_D[curPeriod];
+  document.getElementById('cargo-period').textContent=PERIODS[curPeriod].label;
+  if(!data||!data.length){
+    document.getElementById('cargo-list').innerHTML=`<div style="font-size:12px;color:var(--txt3);padding:8px 0">해당 기간 물류 기록 없음</div>`;
+    return;
+  }
+  document.getElementById('cargo-list').innerHTML=data.map(c=>`
+    <div class="cargo-item">
+      <div class="cargo-icon"><svg viewBox="0 0 24 24"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></svg></div>
+      <div style="flex:1">
+        <div class="cargo-name">${c.item}</div>
+        <div class="cargo-sub">${c.from} → ${c.to}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;font-weight:500;color:#92400e">${c.gdc} GDC</div>
+        <span class="${c.status==='완료'?'status-done':'status-ing'}">${c.status}</span>
+      </div>
+    </div>`).join('');
+}
+
+function renderTrend(){
+  document.getElementById('trend-legend').innerHTML=`
+    <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--txt2)"><span style="width:14px;height:2px;background:#3ecf8e;border-radius:1px;display:inline-block"></span>이동 건수</span>
+    <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--txt2)"><span style="width:10px;height:10px;border-radius:2px;background:#fde68a;border:1px solid #f59e0b;display:inline-block"></span>GDC 지출</span>`;
+  if(tChart){tChart.destroy();tChart=null;}
+  tChart=new Chart(document.getElementById('trend-chart'),{
+    type:'bar',
+    data:{
+      labels:MONTHS,
+      datasets:[
+        {type:'line',label:'이동 건수',data:M_TRIPS,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,.08)',pointBackgroundColor:'#3ecf8e',pointRadius:2,borderWidth:1.5,tension:.3,yAxisID:'y'},
+        {type:'bar',label:'GDC 지출',data:M_GDC,backgroundColor:'rgba(245,158,11,.2)',borderColor:'#f59e0b',borderWidth:1,yAxisID:'y2'},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+      scales:{
+        x:{ticks:{font:{size:9},color:'#9ca3af',autoSkip:false,maxRotation:0},grid:{display:false},border:{display:false}},
+        y:{ticks:{font:{size:9},color:'#9ca3af'},grid:{color:'#f3f4f6'},border:{display:false}},
+        y2:{position:'right',ticks:{font:{size:9},color:'#f59e0b'},grid:{display:false},border:{display:false}},
+      }
+    }
+  });
+}
+
+function renderDist(){
+  const mx=Math.max(...DIST.map(d=>d.count));
+  document.getElementById('dist-list').innerHTML=DIST.map(d=>`
+    <div class="dist-row">
+      <div class="dist-head"><span class="dist-lbl">${d.label}</span><span class="dist-ct">${d.count}회</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(d.count/mx*100)}%;background:${d.color};border:1px solid ${d.color}"></div></div>
+    </div>`).join('');
+}
+
+function renderHour(){
+  const mx=Math.max(...HOUR);
+  const peak=HOUR.indexOf(mx);
+  document.getElementById('peak-lbl').textContent=`${peak}시`;
+  function makeBar(v,h){
+    const t=v/mx;
+    const bg=t>0.8?'#3ecf8e':t>0.5?'#86efac':t>0.25?'#bbf7d0':'#f3f4f6';
+    const ht=Math.max(4,Math.round(t*36));
+    return`<div class="hour-bar"><div class="hour-fill" style="height:${ht}px;background:${bg}"></div><div class="hour-lbl">${h}</div></div>`;
+  }
+  document.getElementById('hour-top').innerHTML=HOUR.slice(0,12).map((v,i)=>makeBar(v,i)).join('');
+  document.getElementById('hour-bot').innerHTML=HOUR.slice(12).map((v,i)=>makeBar(v,i+12)).join('');
+}
+
+function renderGdc(){
+  document.getElementById('gdc-list').innerHTML=GDC_D.map(g=>`
+    <div class="gdc-row">
+      <div class="gdc-head"><span class="gdc-lbl">${g.label}</span><span class="gdc-amt">${g.amt.toLocaleString()} GDC</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${g.pct}%;background:${g.color}"></div></div>
+    </div>`).join('');
+}
+
+function filterHistory(type){
+  const data=type==='all'?HISTORY:HISTORY.filter(h=>h.type===type);
+  renderHistRows(data);
+}
+
+function renderHistRows(data){
+  document.getElementById('history-body').innerHTML=data.map(h=>{
+    const tc2=TC[h.mode]||{bg:'#f9fafb',tc:'#6b7280',bc:'#e5e7eb'};
+    const lc=LC[h.level]||LC['L0'];
+    const typeIco=h.type==='cargo'
+      ?`<span style="font-size:10px;font-weight:500;padding:1px 5px;border-radius:3px;background:#fffbeb;color:#92400e;border:1px solid #fde68a">물류</span>`
+      :`<span style="font-size:10px;font-weight:500;padding:1px 5px;border-radius:3px;background:#f0fdf9;color:#1d6f4e;border:1px solid #a7f3d0">이동</span>`;
+    const stars='★'.repeat(Math.round(h.score))+'☆'.repeat(5-Math.round(h.score));
+    return`<tr>
+      <td class="mono">${h.id}</td>
+      <td style="white-space:nowrap">${h.dt}</td>
+      <td>${typeIco}</td>
+      <td>${h.from}</td>
+      <td class="arrow-cell">→</td>
+      <td>${h.to}</td>
+      <td>
+        <span class="chip" style="background:${tc2.bg};color:${tc2.tc};border-color:${tc2.bc}">${h.mode}</span>
+        ${h.item&&h.item!=='—'?`<div style="font-size:10px;color:var(--txt3);margin-top:1px">${h.item}</div>`:''}
+      </td>
+      <td style="font-weight:500">${h.dist}</td>
+      <td style="color:var(--txt2)">${h.dur}</td>
+      <td style="font-weight:500;color:#92400e">${h.gdc}</td>
+      <td style="font-size:10px;color:#f59e0b;letter-spacing:-1px">${stars}</td>
+      <td><span class="chip" style="background:${lc.bg};color:${lc.tc};border-color:${lc.bc}">${h.level}</span></td>
+    </tr>`;}).join('');
+}
+
+function setActive(el){document.querySelectorAll('.sb-item').forEach(e=>e.classList.remove('active'));el.classList.add('active');}
+function openNationalDash(){window.open('national-dashboard.html','_blank');}
+function toast_show(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+function renderAll(){
+  renderKpi();renderModes();renderCargo();renderTrend();
+  renderDist();renderHour();renderGdc();renderHistRows(HISTORY);
+}
+renderAll();
+</script>
+
+<script type="module" src="https://gopang.net/auth/subsystem-auth.js"></script>
+<script>
+window._onGopangAuth=function(user){
+  const b=document.getElementById('auth-badge');
+  if(b){const c={L0:'#9ca3af',L1:'#3b82f6',L2:'#3ecf8e'};b.textContent=user.level||'L0';b.style.color=c[user.level]||c.L0;}
+  window._gopangUser=user;
+};
+function _sendPdvReport(a){
+  const u=window._gopangUser;if(!u?.ipv6)return;
+  fetch('https://gopang-proxy.tensor-city.workers.dev/pdv/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({report:{svc:'traffic',type:a.type||'action',who:{ipv6:u.ipv6,role:a.role||'user',recipients:['gopang-pdv']},when:{generated_at:new Date().toISOString(),period_start:new Date().toISOString(),period_end:new Date().toISOString()},where:{svc_url:'https://traffic.gopang.net',label:a.label||'/user-dashboard'},what:{summary:a.summary},how:{method:'subsystem-auth',auth_level:u.level||'L0'},why:{goal:a.goal||'사용자 대시보드 조회'}}})}).catch(()=>{});
+}
+window._sendPdvReport=_sendPdvReport;
+</script>
+</body>
+</html>
