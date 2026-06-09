@@ -177,3 +177,54 @@ async function handleAIChat(request, env) {
     return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: CORS });
   }
 }
+
+
+// ══════════════════════════════════════════════════════════════
+// CORS 수정 패치
+// 문제: Access-Control-Allow-Origin 헤더가 'null'로 반환됨
+//
+// 원인: 요청 Origin이 없거나 Worker에서 '*' 대신 req Origin을
+//       그대로 반영하다가 null이 되는 케이스
+//
+// 수정: 모든 응답에 아래 corsHeaders를 공통 적용
+// ══════════════════════════════════════════════════════════════
+
+// Worker fetch 핸들러 최상단에 추가할 CORS 헬퍼
+function getCorsHeaders(request) {
+  const origin = request.headers.get('Origin') || '*';
+  // 허용 도메인 화이트리스트 (필요 시 추가)
+  const allowed = [
+    'https://traffic.gopang.net',
+    'https://health.gopang.net',
+    'https://gopang.net',
+    'http://localhost',
+    'http://127.0.0.1',
+  ];
+  const allowOrigin = allowed.includes(origin) ? origin : '*';
+
+  return {
+    'Access-Control-Allow-Origin':  allowOrigin,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age':       '86400',
+  };
+}
+
+// 모든 핸들러 함수의 Response 생성 시 이렇게 적용:
+//
+//   return new Response(JSON.stringify(data), {
+//     status: 200,
+//     headers: {
+//       'Content-Type': 'application/json',
+//       ...getCorsHeaders(request),   // ← 이 한 줄 추가
+//     },
+//   });
+//
+// OPTIONS preflight는 fetch 핸들러 최상단에서 처리:
+//
+//   if (request.method === 'OPTIONS') {
+//     return new Response(null, {
+//       status: 204,
+//       headers: getCorsHeaders(request),
+//     });
+//   }
