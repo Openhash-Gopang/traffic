@@ -87,7 +87,7 @@ const PDV = {
       content_hash: await _hashReport({ id, from, to, now }),
       who:  { ipv6, role: 'passenger', recipients: ['gopang-pdv'] },
       when: { generated_at: now, period_start: now, period_end: now },
-      where: { svc_url: 'https://traffic.gopang.net', label: from },
+      where: { svc_url: 'https://traffic.hondi.net', label: from },
       what: {
         summary:       `이동 요청: ${from} → ${to}`,
         from, to, passengers,
@@ -120,7 +120,7 @@ const PDV = {
         recipients:   ['gopang-pdv'],
       },
       when: { generated_at: now, period_start: now, period_end: now },
-      where: { svc_url: 'https://traffic.gopang.net', label: from },
+      where: { svc_url: 'https://traffic.hondi.net', label: from },
       what: {
         summary:       `탑승 시작: ${from} → ${to} | 차량 ${vehicleNo}`,
         from, to,
@@ -154,7 +154,7 @@ const PDV = {
         recipients:   ['gopang-pdv'],
       },
       when: { generated_at: now, period_start: now, period_end: now },
-      where: { svc_url: 'https://traffic.gopang.net', label: to },
+      where: { svc_url: 'https://traffic.hondi.net', label: to },
       what: {
         summary:      `탑승 완료: ${from} → ${to} | ${gdc} GDC 결제`,
         from, to,
@@ -185,7 +185,7 @@ const PDV = {
       content_hash: await _hashReport({ id, deliveryId, gdc, now }),
       who:  { ipv6, role: 'shipper', recipients: ['gopang-pdv'] },
       when: { generated_at: now, period_start: now, period_end: now },
-      where: { svc_url: 'https://traffic.gopang.net', label: pickupAddr },
+      where: { svc_url: 'https://traffic.hondi.net', label: pickupAddr },
       what: {
         summary:       `배송: ${pickupAddr} → ${deliveryAddr} | ${cargoDesc}`,
         pickup:        pickupAddr,
@@ -220,7 +220,7 @@ const PDV = {
         recipients:   ['gopang-pdv'],
       },
       when: { generated_at: now, period_start: now, period_end: now },
-      where: { svc_url: 'https://traffic.gopang.net', label: 'K-Traffic 평가' },
+      where: { svc_url: 'https://traffic.hondi.net', label: 'K-Traffic 평가' },
       what: {
         summary:     `${targetRole} 평가: ${score}점 — ${comment.slice(0,50)}`,
         target_ipv6: targetIpv6,
@@ -251,7 +251,7 @@ const PDV = {
         recipients:   ['gopang-pdv', '112'],
       },
       when: { generated_at: now, period_start: now, period_end: now },
-      where: { svc_url: 'https://traffic.gopang.net', label: from },
+      where: { svc_url: 'https://traffic.hondi.net', label: from },
       what: {
         summary:     `긴급 신고: ${description}`,
         location:    from,

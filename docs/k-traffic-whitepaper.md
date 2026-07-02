@@ -354,7 +354,7 @@ PDV 기록의 구조 (5W1H):
     "period_end":    "2026-06-03T09:28:00Z"
   },
   "where": {
-    "svc_url":    "https://traffic.gopang.net",
+    "svc_url":    "https://traffic.hondi.net",
     "label":      "한경면"
   },
   "what": {
@@ -411,7 +411,7 @@ K-Traffic은 고팡 생태계의 공통 인증 시스템을 사용한다. `subsy
 
 ```
 [경로 1] GWP 토큰 처리
-  gopang.net 로그인 → gwp_token 발급 → URL 파라미터 전달
+  hondi.net 로그인 → gwp_token 발급 → URL 파라미터 전달
   → subsystem-auth.js가 파싱 → sessionStorage 저장
 
 [경로 2A] 세션 캐시 재사용
@@ -748,7 +748,7 @@ Cloudflare Dashboard 시크릿 목록:
 ### 10.1 파일 구조
 
 ```
-traffic.gopang.net (GitHub Pages)
+traffic.hondi.net (GitHub Pages)
 ├── index.html                  # 고팡 생태계 진입점
 ├── desktop.html                # 데스크톱 앱
 ├── webapp.html                 # 모바일 웹앱
@@ -757,7 +757,7 @@ traffic.gopang.net (GitHub Pages)
 ├── realtime-board.html         # 실시간 상황판
 ├── pdv.js                      # PDV 기록 모듈 v2.0
 ├── worker-kakao-patch.js       # Worker 패치 (배포용)
-├── CNAME                       # traffic.gopang.net
+├── CNAME                       # traffic.hondi.net
 ├── .nojekyll
 └── prompts/
     └── traffic.md              # DeepSeek 시스템 프롬프트
@@ -790,7 +790,7 @@ export default {
 
 ```
 개발자 로컬
-  → git push → GitHub Pages (traffic.gopang.net)
+  → git push → GitHub Pages (traffic.hondi.net)
   → Cloudflare Workers deploy (gopang-proxy)
   → Supabase (pdv_log, 자동 마이그레이션)
 ```
@@ -935,6 +935,6 @@ export default {
 
 ---
 
-*본 백서는 2026년 6월 기준으로 작성되었습니다. K-Traffic 시스템은 지속적으로 개발·개선되고 있으며, 최신 정보는 [traffic.gopang.net](https://traffic.gopang.net)에서 확인할 수 있습니다.*
+*본 백서는 2026년 6월 기준으로 작성되었습니다. K-Traffic 시스템은 지속적으로 개발·개선되고 있으며, 최신 정보는 [traffic.hondi.net](https://traffic.hondi.net)에서 확인할 수 있습니다.*
 
 *© 2026 Gopang Ecosystem — K-Traffic Team. All rights reserved.*

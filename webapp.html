@@ -9,7 +9,7 @@
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap">
-<script type="module" src="https://gopang.net/auth/subsystem-auth.js"></script>
+<script type="module" src="https://hondi.net/auth/subsystem-auth.js"></script>
 <style>
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -539,7 +539,7 @@ function _recordPdv(userMsg) {
     const user_guid=token.ipv6||'anonymous';
     fetch(`${PROXY}/pdv_log`,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({user_guid,source:'ktransport',report:{pdv_6w:{
-        who:user_guid,when:new Date().toISOString(),where:'https://traffic.gopang.net/webapp.html',
+        who:user_guid,when:new Date().toISOString(),where:'https://traffic.hondi.net/webapp.html',
         what:'K-Traffic AI 교통·물류 매칭',how:`질문: ${(userMsg||'').slice(0,60)}`,why:'교통·물류 수요 매칭'
       }}})
     }).catch(()=>{});

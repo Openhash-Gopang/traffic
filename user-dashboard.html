@@ -307,7 +307,7 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
   </div>
 
   <div class="sb-foot">
-    <a href="https://gopang.net" style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:5px;color:var(--txt3);font-size:12px;transition:background .12s;white-space:nowrap">
+    <a href="https://hondi.net" style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:5px;color:var(--txt3);font-size:12px;transition:background .12s;white-space:nowrap">
       <svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
       <span class="sb-uname">← 고팡으로</span>
     </a>
@@ -722,7 +722,7 @@ function renderAll(){
 renderAll();
 </script>
 
-<script type="module" src="https://gopang.net/auth/subsystem-auth.js"></script>
+<script type="module" src="https://hondi.net/auth/subsystem-auth.js"></script>
 <script>
 window._onGopangAuth=function(user){
   const b=document.getElementById('auth-badge');
@@ -731,7 +731,7 @@ window._onGopangAuth=function(user){
 };
 function _sendPdvReport(a){
   const u=window._gopangUser;if(!u?.ipv6)return;
-  fetch('https://gopang-proxy.tensor-city.workers.dev/pdv/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({report:{svc:'traffic',type:a.type||'action',who:{ipv6:u.ipv6,role:a.role||'user',recipients:['gopang-pdv']},when:{generated_at:new Date().toISOString(),period_start:new Date().toISOString(),period_end:new Date().toISOString()},where:{svc_url:'https://traffic.gopang.net',label:a.label||'/user-dashboard'},what:{summary:a.summary},how:{method:'subsystem-auth',auth_level:u.level||'L0'},why:{goal:a.goal||'사용자 대시보드 조회'}}})}).catch(()=>{});
+  fetch('https://gopang-proxy.tensor-city.workers.dev/pdv/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({report:{svc:'traffic',type:a.type||'action',who:{ipv6:u.ipv6,role:a.role||'user',recipients:['gopang-pdv']},when:{generated_at:new Date().toISOString(),period_start:new Date().toISOString(),period_end:new Date().toISOString()},where:{svc_url:'https://traffic.hondi.net',label:a.label||'/user-dashboard'},what:{summary:a.summary},how:{method:'subsystem-auth',auth_level:u.level||'L0'},why:{goal:a.goal||'사용자 대시보드 조회'}}})}).catch(()=>{});
 }
 window._sendPdvReport=_sendPdvReport;
 </script>

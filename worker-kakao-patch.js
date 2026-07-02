@@ -194,9 +194,9 @@ function getCorsHeaders(request) {
   const origin = request.headers.get('Origin') || '*';
   // 허용 도메인 화이트리스트 (필요 시 추가)
   const allowed = [
-    'https://traffic.gopang.net',
-    'https://health.gopang.net',
-    'https://gopang.net',
+    'https://traffic.hondi.net',
+    'https://health.hondi.net',
+    'https://hondi.net',
     'http://localhost',
     'http://127.0.0.1',
   ];

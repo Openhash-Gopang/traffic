@@ -3,7 +3,7 @@
 > **고팡(Gopang) 생태계** 위에서 동작하는 AI 교통·물류 플랫폼.  
 > 이미 이동 중인 차량의 동선에 새로운 수요를 끼워 넣어 최적의 이동·물류 경로를 구성합니다.
 
-🌐 **배포 주소**: [traffic.gopang.net](https://traffic.gopang.net)  
+🌐 **배포 주소**: [traffic.hondi.net](https://traffic.hondi.net)  
 📄 **백서**: [docs/k-traffic-whitepaper.md](docs/k-traffic-whitepaper.md)
 
 ---
@@ -16,7 +16,7 @@ traffic/
 │   ─── 진입점 & GitHub Pages 설정 ───
 │   index.html                  고팡 생태계 진입점
 │   .nojekyll                   Jekyll 비활성화
-│   CNAME                       traffic.gopang.net
+│   CNAME                       traffic.hondi.net
 │
 │   ─── 클라이언트 앱 ───
 │   desktop.html                데스크톱 앱 (이동 요청·AI 상담·PDV 기록)
@@ -132,12 +132,12 @@ git push
 
 | 시스템 | 도메인 | 상태 |
 |--------|--------|------|
-| K-Traffic | traffic.gopang.net | ✅ 운영 중 |
-| K-Law | klaw.gopang.net | ✅ 운영 중 |
-| K-Health | health.gopang.net | ✅ 운영 중 |
-| K-School | school.gopang.net | ✅ 운영 중 |
-| K-Market | market.gopang.net | ✅ 운영 중 |
-| K-Police | police.gopang.net | ✅ 운영 중 |
+| K-Traffic | traffic.hondi.net | ✅ 운영 중 |
+| K-Law | klaw.hondi.net | ✅ 운영 중 |
+| K-Health | health.hondi.net | ✅ 운영 중 |
+| K-School | school.hondi.net | ✅ 운영 중 |
+| K-Market | market.hondi.net | ✅ 운영 중 |
+| K-Police | police.hondi.net | ✅ 운영 중 |
 
 ---
 
