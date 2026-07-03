@@ -66,7 +66,7 @@ button{font-family:var(--font)}
 .bubble-user{align-self:flex-end;background:var(--pri);color:#fff;border-top-right-radius:4px}
 .bubble-typing{align-self:flex-start;display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--sur);border:1px solid var(--bdr);border-radius:14px;border-top-left-radius:4px;font-size:12.5px;color:var(--hint)}
 
-/* ── 분석 카드 / 판결 요약 카드 ── */
+/* ── 분석 카드 / 안내 요약 카드 ── */
 .analysis-card{display:flex;flex-direction:column;gap:8px}
 .ac-type{display:inline-block;align-self:flex-start;color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px}
 .ac-row b{display:block;font-size:11.5px;color:var(--hint);font-weight:700;margin-bottom:2px}
@@ -438,7 +438,7 @@ async function _handleInterviewTurn(text) {
 
   const typing = appendTyping();
   try {
-    const raw = await _govCall(conversationState.messages, { maxTokens: 800 });
+    const raw = await _govCall(conversationState.messages, { maxTokens: 1000 });
     typing.remove();
     const { visible, state } = _parseInterviewState(raw);
     conversationState.messages.push({ role:'assistant', content: raw });
@@ -515,7 +515,7 @@ async function _handleFreeQuestion(text) {
   conversationState.messages.push({ role:'user', content: text });
   const typing = appendTyping();
   try {
-    const resp = await _govCall(conversationState.messages, { maxTokens: 800 });
+    const resp = await _govCall(conversationState.messages, { maxTokens: 1000 });
     typing.remove();
     appendBubble('ai', escHtml(resp).replace(/\n/g,'<br>'));
     conversationState.messages.push({ role:'assistant', content: resp });
