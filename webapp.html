@@ -66,7 +66,7 @@ button{font-family:var(--font)}
 .bubble-user{align-self:flex-end;background:var(--pri);color:#fff;border-top-right-radius:4px}
 .bubble-typing{align-self:flex-start;display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--sur);border:1px solid var(--bdr);border-radius:14px;border-top-left-radius:4px;font-size:12.5px;color:var(--hint)}
 
-/* ── 분석 카드 / 안내 요약 카드 ── */
+/* ── 분석 카드 / 판결 요약 카드 ── */
 .analysis-card{display:flex;flex-direction:column;gap:8px}
 .ac-type{display:inline-block;align-self:flex-start;color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px}
 .ac-row b{display:block;font-size:11.5px;color:var(--hint);font-weight:700;margin-bottom:2px}
@@ -129,6 +129,69 @@ button{font-family:var(--font)}
 .sheet-hint{font-size:11px;color:var(--hint);line-height:1.6;margin-bottom:14px}
 .sheet-save{width:100%;padding:12px;border-radius:8px;border:none;background:var(--pri);color:#fff;font-weight:700;font-size:14px;cursor:pointer}
 .sheet-save:active{background:var(--pri-lt)}
+.attach-btn{
+  width:36px;height:36px;flex-shrink:0;border-radius:50%;border:1.5px solid var(--bdr);background:var(--bg);
+  color:var(--sub);display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.attach-btn:active{background:var(--pri-bg);color:var(--pri);border-color:var(--pri-bd)}
+.attach-btn svg{width:16px;height:16px}
+.file-chips{flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap;padding:0 12px;margin-bottom:-2px}
+.file-chips:empty{display:none;margin:0}
+.file-chip{display:flex;align-items:center;gap:5px;background:var(--pri-bg);border:1px solid var(--pri-bd);border-radius:999px;padding:4px 10px 4px 12px;font-size:11.5px;color:var(--pri)}
+.file-chip button{border:none;background:none;color:var(--pri);cursor:pointer;font-size:12px;line-height:1;padding:0}
+.mic-btn.recording{background:var(--rbg);border-color:#fca5a5;color:var(--red);animation:pulse 1s infinite}
+.mic-btn svg{width:18px;height:18px}
+#chat-input{
+  flex:1;resize:none;max-height:120px;min-height:40px;padding:10px 14px;border-radius:20px;
+  border:1.5px solid var(--bdr);font-family:var(--font);font-size:14.5px;line-height:1.5;background:var(--bg);color:var(--txt);
+}
+#chat-input:focus{outline:none;border-color:var(--pri);background:var(--sur)}
+.send-btn{
+  width:40px;height:40px;flex-shrink:0;border-radius:50%;border:none;background:var(--bdr);color:#fff;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;
+}
+.send-btn.active{background:var(--pri)}
+.send-btn svg{width:17px;height:17px}
+#mic-msg{margin:0 12px 8px;padding:9px 12px;border-radius:8px;font-size:11.5px;line-height:1.6}
+
+/* ── 설정 시트 ── */
+.sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s;z-index:30}
+.sheet-backdrop.open{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;background:var(--sur);border-radius:16px 16px 0 0;
+  padding:18px 18px calc(18px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .25s ease;z-index:31;
+  box-shadow:0 -4px 20px rgba(0,0,0,.15);max-height:80vh;overflow-y:auto;
+}
+.sheet.open{transform:translateY(0)}
+.sheet-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sheet-hd h3{font-size:15.5px;font-weight:800}
+.sheet-close{width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--sub)}
+
+/* ── 모델 선택(설정 시트) — 2026-07-03 신설, UI 전용 ── */
+.model-section{margin-top:18px;padding-top:14px;border-top:1px solid var(--bdr)}
+.model-section > label{font-size:12px;font-weight:700;color:var(--hint);display:block;margin-bottom:8px}
+.model-mode-toggle{display:flex;gap:6px;margin-bottom:10px}
+.mode-btn{flex:1;padding:9px 6px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--sur);color:var(--sub);font-size:12.5px;font-weight:700;cursor:pointer}
+.mode-btn.active{background:var(--pri-bg);border-color:var(--pri);color:var(--pri)}
+#model-search{width:100%;padding:10px 12px;border-radius:8px;border:1.5px solid var(--bdr);font-size:13px;font-family:var(--font);margin-bottom:8px}
+#model-search:focus{outline:none;border-color:var(--pri)}
+.model-list{max-height:220px;overflow-y:auto;border:1px solid var(--bdr);border-radius:8px;margin-bottom:8px}
+.model-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--bdr);cursor:pointer}
+.model-item-disabled{opacity:.45;cursor:not-allowed}
+.model-item:last-child{border-bottom:none}
+.model-item:active{background:var(--pri-bg)}
+.model-item.selected{background:var(--pri-bg)}
+.model-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--bdr);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff}
+.model-mode-toggle ~ #model-search ~ .model-list .model-check{border-radius:50%} /* single 모드일 때 라디오 느낌 */
+.model-item.selected .model-check{background:var(--pri);border-color:var(--pri)}
+.model-name{flex:1;min-width:0}
+.model-name b{display:block;font-size:13px;font-weight:700;color:var(--txt)}
+.model-name span{font-size:11px;color:var(--hint)}
+.model-flag{font-size:11px;color:var(--hint);flex-shrink:0}
+.model-empty{padding:16px;text-align:center;font-size:12.5px;color:var(--hint)}
+.model-note{font-size:10.5px;color:var(--hint);line-height:1.6}
+.ensemble-count{font-size:11px;color:var(--pri);font-weight:700;margin-bottom:8px;display:none}
+.ensemble-count.show{display:block}
 </style>
 </head>
 <body>
@@ -147,7 +210,16 @@ button{font-family:var(--font)}
 
 <main id="chat-thread"></main>
 
+<div class="file-chips" id="file-chips"></div>
 <footer id="input-bar">
+  <button class="attach-btn" onclick="document.getElementById('file-input').click()" title="파일 첨부">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+  </button>
+  <input type="file" id="file-input" multiple accept=".txt,.pdf,.docx,.jpg,.jpeg,.png" style="display:none" onchange="handleAttach(this)">
+  <button class="attach-btn" onclick="document.getElementById('cam-input').click()" title="사진 촬영">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+  </button>
+  <input type="file" id="cam-input" accept="image/*" capture="environment" style="display:none" onchange="handleAttach(this)">
   <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="음성 입력">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0"/><line x1="12" y1="22" x2="12" y2="18"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
   </button>
@@ -160,14 +232,31 @@ button{font-family:var(--font)}
 <div class="sheet-backdrop" id="sheet-backdrop" onclick="closeSettings()"></div>
 <div class="sheet" id="settings-sheet">
   <div class="sheet-hd">
-    <h3>이용 안내</h3>
+    <h3>AI 모델 설정</h3>
     <button class="sheet-close" onclick="closeSettings()">✕</button>
   </div>
-  <div class="sheet-hint" style="font-size:12.5px;line-height:1.9;margin-bottom:0">
-    K-Traffic 모바일은 <b>혼디 커뮤니티가 함께 사용하는 공유 계정</b>으로 동작합니다.
-    별도로 API Key를 등록하실 필요가 없습니다.<br><br>
-    안정적인 이용을 위해 1인당 1일 이용 한도가 있으며, 한도에 도달하면
-    다음 날 다시 이용하실 수 있습니다.
+
+  <div class="model-section" style="margin-top:0;padding-top:0;border-top:none">
+    <label>AI 모델 선택</label>
+    <div class="model-mode-toggle">
+      <button type="button" class="mode-btn active" id="mode-single" onclick="setModelMode('single')">단일 모델</button>
+      <button type="button" class="mode-btn" id="mode-ensemble" onclick="setModelMode('ensemble')">앙상블 (여러 모델 토론)</button>
+    </div>
+    <input type="text" id="model-search" placeholder="모델·회사 이름으로 검색 (예: Claude, Gemini, Qwen, HyperCLOVA)…" oninput="renderModelList()">
+    <div id="model-list" class="model-list"></div>
+    <div id="byok-key-section" style="display:none;margin-top:10px">
+      <label id="byok-key-label" style="font-size:12px;font-weight:700;color:var(--hint);display:block;margin-bottom:6px"></label>
+      <input type="password" id="byok-key-input" placeholder="API Key 입력" style="width:100%;padding:11px 12px;border-radius:8px;border:1.5px solid var(--bdr);font-size:13.5px;font-family:var(--font);margin-bottom:6px">
+      <button type="button" onclick="saveByokKeyClick()" style="width:100%;padding:11px;border-radius:8px;border:none;background:var(--pri);color:#fff;font-weight:700;font-size:13.5px;cursor:pointer">저장</button>
+    </div>
+    <div class="model-note">
+      OpenAI · Google(Gemini) · xAI(Grok) · DeepSeek는 자신의 API 키로 직접 사용할 수
+      있습니다(입력한 키의 사용 비용은 본인 부담이며, K-Traffic 서버로 전송되지 않고
+      이 기기에만 저장됩니다). 그 외 모델(Claude 포함)과 앙상블(여러 모델 토론)
+      모드는 아직 실제 연동 전이라 선택이 제한돼 있습니다 — 목록에 "연동 준비중"
+      으로 표시됩니다. 아무 모델도 선택하지 않으면 기존처럼 K-Traffic 공유 계정
+      (DeepSeek)이 처리합니다.
+    </div>
   </div>
 </div>
 
@@ -190,8 +279,8 @@ if (_qs.get('ctx')) {
 let _gwpSeedUsed = false;
 
 // ══════════════════════════════════════════════════════════════
-// 서버 강제 상속 릴레이(/gov/relay) — K-Public 공통 규칙은 서버가
-// 자동으로 붙인다. 클라이언트는 K-Public 고유 규칙(agencyPrompt)과
+// 서버 강제 상속 릴레이(/gov/relay) — K-Traffic 공통 규칙은 서버가
+// 자동으로 붙인다. 클라이언트는 K-Traffic 고유 규칙(agencyPrompt)과
 // 대화 내용만 보낸다 — SP-COMMON-05 H2/H6 강제 구조.
 // ══════════════════════════════════════════════════════════════
 const PROXY          = 'https://gopang-proxy.tensor-city.workers.dev';
@@ -201,7 +290,7 @@ const GOV_TIER        = 'gov-flash'; // 민원 안내는 무거운 추론이 필
 
 function escHtml(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-// ── K-Public 고유 규칙 (K-Public 공통 규칙은 서버가 앞에 자동으로 붙임) ──
+// ── K-Traffic 고유 규칙 (K-Traffic 공통 규칙은 서버가 앞에 자동으로 붙임) ──
 // SP-COMMON-04(M1~M12) 원칙 준수: AI 주도·1턴 1질문·사용자 질문 우선 응답·
 // 종료 기준선·감정 공감·음성입력 처리·상태 마커 길이 상한.
 const AGENCY_PROMPT = `당신은 교통행정(도로·대중교통·주정차 단속·과태료 등)을 대신하는
@@ -279,7 +368,7 @@ function appendTyping() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// 공용 릴레이 호출 — BYOK 없음, K-Public 공통 규칙은 서버가 자동 삽입
+// 공용 릴레이 호출 — BYOK 없음, K-Traffic 공통 규칙은 서버가 자동 삽입
 // ══════════════════════════════════════════════════════════════
 async function _pumpSSE(response, handleJson) {
   if (!response.ok) {
@@ -310,8 +399,35 @@ async function _pumpSSE(response, handleJson) {
 
 function _govGuid() { return k_trafficUser?.ipv6 || GWP_TOKEN || 'anonymous'; }
 
+// BYOK 경로에서는 서버(/gov/relay)가 하던 "K-Traffic 공통 규칙 자동 삽입"을
+// 클라이언트가 대신 해야 한다 — /llm/relay는 메시지를 그대로 통과시키기
+// 때문이다(SP-COMMON-05 H2). 서버 강제만큼 완전하지는 않지만(사용자가
+// 마음만 먹으면 우회 가능), 정상 경로에서는 항상 공통 규칙이 따라붙는다.
+const K_PUBLIC_COMMON_RAW_URL = 'https://raw.githubusercontent.com/Openhash-Gopang/gopang/main/prompts/K-Traffic_common_v1_0.md';
+let _kPublicCommonClientCache = null;
+async function _fetchKPublicCommonClient() {
+  if (_kPublicCommonClientCache) return _kPublicCommonClientCache;
+  try {
+    const r = await fetch(K_PUBLIC_COMMON_RAW_URL, { cache: 'no-cache' });
+    if (r.ok) { _kPublicCommonClientCache = await r.text(); return _kPublicCommonClientCache; }
+  } catch(e) { console.warn('[BYOK] K-Traffic 공통 규칙 로드 실패:', e.message); }
+  return ''; // 실패해도 agencyPrompt만으로 서비스 지속
+}
+
 async function _govCall(messages, opts = {}) {
   const { maxTokens = 1000, stream = false, onChunk = null } = opts;
+
+  const byok = _activeByok();
+  if (byok) {
+    const kPublicCommon = await _fetchKPublicCommonClient();
+    const systemContent = kPublicCommon ? `${kPublicCommon}\n\n---\n\n${AGENCY_PROMPT}` : AGENCY_PROMPT;
+    try {
+      return await _llmRelayCall(byok, [{ role:'system', content: systemContent }, ...messages], { maxTokens, stream, onChunk });
+    } catch(e) {
+      throw new Error(`${byok.name} 호출 실패: ${e.message} — 설정에서 API Key를 확인해 주세요.`);
+    }
+  }
+
   const resp = await fetch(GOV_RELAY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -341,7 +457,7 @@ async function _govCall(messages, opts = {}) {
 // ══════════════════════════════════════════════════════════════
 let conversationState = {
   phase: 'boot',            // boot → interviewing → generating → done
-  messages: [],              // system 메시지 없음 — 서버가 K-Public 공통+agencyPrompt로 자동 조립
+  messages: [],              // system 메시지 없음 — 서버가 K-Traffic 공통+agencyPrompt로 자동 조립
   caseState: { type:'', applicant:'', purpose:'', region:'', urgency:'', extra:'' },
   turnCount: 0
 };
@@ -361,6 +477,37 @@ const _KPUB_REPEAT_GREETINGS = [
 function _pickRepeatGreeting(name) {
   const fn = _KPUB_REPEAT_GREETINGS[Math.floor(Math.random() * _KPUB_REPEAT_GREETINGS.length)];
   return fn(name);
+}
+
+// 파일 첨부 / 카메라 (2026-07-03 신설, UI 전용)
+// 백엔드(/gov/relay)는 아직 파일 업로드를 받지 않으므로, 텍스트류
+// 파일은 읽어서 다음 사용자 메시지 앞에 자동으로 붙여 보내고, 이미지 등
+// 그 외 파일은 칩으로 표시만 해 사용자가 상담 중 "이 서류를 첨부했다"는
+// 사실을 대화로 언급할 수 있게 한다(실제 이미지 인식·OCR 연동은 범위 밖).
+// ══════════════════════════════════════════════════════════════
+let attachedFiles = [];
+let attachedTextContext = '';
+
+function handleAttach(inputEl) {
+  const files = Array.from(inputEl.files || []);
+  files.forEach(f => {
+    attachedFiles.push(f);
+    const chip = document.createElement('span');
+    chip.className = 'file-chip';
+    chip.innerHTML = `📎 ${escHtml(f.name)} <button type="button">✕</button>`;
+    chip.querySelector('button').onclick = () => {
+      attachedFiles = attachedFiles.filter(x => x !== f);
+      chip.remove();
+    };
+    document.getElementById('file-chips').appendChild(chip);
+
+    if (/\.(txt|md)$/i.test(f.name)) {
+      const reader = new FileReader();
+      reader.onload = () => { attachedTextContext += `\n\n[첨부파일 "${f.name}" 내용]\n${reader.result}`; };
+      reader.readAsText(f);
+    }
+  });
+  inputEl.value = '';
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -438,7 +585,7 @@ async function _handleInterviewTurn(text) {
 
   const typing = appendTyping();
   try {
-    const raw = await _govCall(conversationState.messages, { maxTokens: 1000 });
+    const raw = await _govCall(conversationState.messages, { maxTokens: 800 });
     typing.remove();
     const { visible, state } = _parseInterviewState(raw);
     conversationState.messages.push({ role:'assistant', content: raw });
@@ -515,7 +662,7 @@ async function _handleFreeQuestion(text) {
   conversationState.messages.push({ role:'user', content: text });
   const typing = appendTyping();
   try {
-    const resp = await _govCall(conversationState.messages, { maxTokens: 1000 });
+    const resp = await _govCall(conversationState.messages, { maxTokens: 800 });
     typing.remove();
     appendBubble('ai', escHtml(resp).replace(/\n/g,'<br>'));
     conversationState.messages.push({ role:'assistant', content: resp });
@@ -531,11 +678,251 @@ async function _handleFreeQuestion(text) {
 function openSettings() {
   document.getElementById('sheet-backdrop').classList.add('open');
   document.getElementById('settings-sheet').classList.add('open');
+  renderModelList();
+  renderByokKeyInput();
 }
 function closeSettings() {
   document.getElementById('sheet-backdrop').classList.remove('open');
   document.getElementById('settings-sheet').classList.remove('open');
 }
+
+// ══════════════════════════════════════════════════════════════
+// 모델 선택 UI (2026-07-03 신설, 2026-07-03 BYOK 실연동 — OpenAI·Google·
+// xAI·DeepSeek는 /llm/relay로 실제 호출된다. 그 외 벤더·앙상블은 선택 자체가
+// 막혀 있다 — LLM_RELAY_PROVIDERS/MODEL_API_ID 참조)
+// ══════════════════════════════════════════════════════════════
+function renderByokKeyInput() {
+  const section = document.getElementById('byok-key-section');
+  const label   = document.getElementById('byok-key-label');
+  const input   = document.getElementById('byok-key-input');
+  if (!section) return;
+  if (modelMode !== 'single' || selectedModels.length !== 1) { section.style.display = 'none'; return; }
+  const key = selectedModels[0];
+  const [vendor, name] = key.split(':');
+  if (!_isModelRelaySupported(vendor, name)) { section.style.display = 'none'; return; }
+  section.style.display = '';
+  label.textContent = `${name} (${vendor}) API Key`;
+  input.value = loadByokKey(key);
+}
+function saveByokKeyClick() {
+  if (modelMode !== 'single' || selectedModels.length !== 1) return;
+  const key = selectedModels[0];
+  const input = document.getElementById('byok-key-input');
+  const val = input ? input.value.trim() : '';
+  saveByokKey(key, val);
+  appendBubble('ai', val ? `✅ ${key.split(':')[1]} API Key가 저장되었습니다. 앞으로 이 모델로 대화가 진행됩니다.` : '🗑️ API Key가 삭제되어 공유 계정으로 되돌아갑니다.');
+  closeSettings();
+}
+const MODEL_CATALOG = [
+  // ── 미국 ──
+  { vendor:'OpenAI',     name:'GPT-5',                country:'🇺🇸' },
+  { vendor:'OpenAI',     name:'GPT-4.1',              country:'🇺🇸' },
+  { vendor:'OpenAI',     name:'GPT-4o',               country:'🇺🇸' },
+  { vendor:'OpenAI',     name:'o3',                   country:'🇺🇸' },
+  { vendor:'OpenAI',     name:'o3-mini',              country:'🇺🇸' },
+  { vendor:'Anthropic',  name:'Claude Opus 4.8',      country:'🇺🇸' },
+  { vendor:'Anthropic',  name:'Claude Sonnet 5',      country:'🇺🇸' },
+  { vendor:'Anthropic',  name:'Claude Haiku 4.5',     country:'🇺🇸' },
+  { vendor:'Anthropic',  name:'Claude Fable 5',       country:'🇺🇸' },
+  { vendor:'Google',     name:'Gemini 2.5 Pro',       country:'🇺🇸' },
+  { vendor:'Google',     name:'Gemini 2.5 Flash',     country:'🇺🇸' },
+  { vendor:'Google',     name:'Gemini 2.0 Flash',     country:'🇺🇸' },
+  { vendor:'xAI',        name:'Grok 4',               country:'🇺🇸' },
+  { vendor:'xAI',        name:'Grok 3',                country:'🇺🇸' },
+  { vendor:'xAI',        name:'Grok 3 mini',           country:'🇺🇸' },
+  { vendor:'Meta',       name:'Llama 4 Maverick',      country:'🇺🇸' },
+  { vendor:'Meta',       name:'Llama 4 Scout',         country:'🇺🇸' },
+  { vendor:'Meta',       name:'Llama 3.3',             country:'🇺🇸' },
+  { vendor:'Amazon',     name:'Nova Pro',              country:'🇺🇸' },
+  { vendor:'Amazon',     name:'Nova Lite',             country:'🇺🇸' },
+  { vendor:'Microsoft',  name:'Phi-4',                 country:'🇺🇸' },
+  { vendor:'Cohere',     name:'Command R+',            country:'🇨🇦' },
+  { vendor:'Mistral AI', name:'Mistral Large 2',       country:'🇫🇷' },
+  { vendor:'Mistral AI', name:'Mistral Small',         country:'🇫🇷' },
+  { vendor:'Mistral AI', name:'Codestral',             country:'🇫🇷' },
+  // ── 중국 ──
+  { vendor:'DeepSeek',   name:'DeepSeek V4',           country:'🇨🇳' },
+  { vendor:'DeepSeek',   name:'DeepSeek R2',           country:'🇨🇳' },
+  { vendor:'Alibaba',    name:'Qwen 3',                country:'🇨🇳' },
+  { vendor:'Alibaba',    name:'Qwen 2.5 Max',          country:'🇨🇳' },
+  { vendor:'Baidu',      name:'ERNIE 4.5',             country:'🇨🇳' },
+  { vendor:'Baidu',      name:'ERNIE X1',              country:'🇨🇳' },
+  { vendor:'Moonshot AI',name:'Kimi K2',               country:'🇨🇳' },
+  { vendor:'Zhipu AI',   name:'GLM-4.5',               country:'🇨🇳' },
+  { vendor:'01.AI',      name:'Yi-Large',              country:'🇨🇳' },
+  { vendor:'MiniMax',    name:'MiniMax-01',            country:'🇨🇳' },
+  { vendor:'Tencent',    name:'Hunyuan-Turbo',         country:'🇨🇳' },
+  { vendor:'ByteDance',  name:'Doubao Pro',            country:'🇨🇳' },
+  { vendor:'SenseTime',  name:'SenseChat 5',           country:'🇨🇳' },
+  { vendor:'iFlytek',    name:'Spark 4',               country:'🇨🇳' },
+  // ── 한국 ──
+  { vendor:'네이버',      name:'HyperCLOVA X SEED',     country:'🇰🇷' },
+  { vendor:'네이버',      name:'HyperCLOVA X Think',    country:'🇰🇷' },
+  { vendor:'LG AI연구원', name:'EXAONE 4.0',            country:'🇰🇷' },
+  { vendor:'Upstage',    name:'Solar Pro 2',           country:'🇰🇷' },
+  { vendor:'KT',         name:'Mi:dm 2.0',             country:'🇰🇷' },
+  { vendor:'SKT',        name:'A.X 4.0',                country:'🇰🇷' },
+  { vendor:'NCSOFT',     name:'VARCO LLM',              country:'🇰🇷' },
+  { vendor:'삼성전자',    name:'Samsung Gauss 2',        country:'🇰🇷' },
+  // ── 기타 ──
+  { vendor:'Aleph Alpha',name:'Luminous',              country:'🇩🇪' },
+  { vendor:'TII',        name:'Falcon 3',              country:'🇦🇪' },
+  { vendor:'Reka AI',    name:'Reka Core',             country:'🇺🇸' },
+];
+
+// ══════════════════════════════════════════════════════════════
+// BYOK(자기 API 키) 실제 연동 — /llm/relay가 지원하는 호스트만 가능
+// worker.js ALLOWED_LLM_RELAY_HOSTS: OpenAI · Google(Gemini, OpenAI 호환
+// 레이어) · xAI(Grok) · DeepSeek · OpenRouter(현재 미사용) 뿐이다.
+// Anthropic은 스키마가 달라 의도적으로 제외돼 있다(worker.js 주석 참조).
+// 여기 없는 벤더는 현재 실제 호출이 불가능하므로 UI에서 선택을 막는다 —
+// "선택은 되는데 실제로는 공유 계정이 대신 처리되는" 조용한 오작동을 방지.
+// ══════════════════════════════════════════════════════════════
+const LLM_RELAY_PROVIDERS = {
+  'OpenAI':    { baseUrl: 'https://api.openai.com/v1', provider: 'openai' },
+  'Google':    { baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', provider: 'google' },
+  'xAI':       { baseUrl: 'https://api.x.ai/v1', provider: 'xai' },
+  'DeepSeek':  { baseUrl: 'https://api.deepseek.com', provider: 'deepseek' },
+};
+// 카탈로그 표시명 → 벤더 API가 실제로 받는 model id. worker.js가 이미
+// 검증해 쓰고 있는 값(예: deepseek-chat/deepseek-reasoner)은 그대로 가져왔고,
+// 나머지는 각 벤더의 공개 문서 기준 통상적인 id 표기다 — 벤더가 모델명을
+// 개정하면 이 표도 함께 갱신해야 한다.
+const MODEL_API_ID = {
+  'OpenAI:GPT-4.1':                'gpt-4.1',
+  'OpenAI:GPT-4o':                 'gpt-4o',
+  'OpenAI:o3':                     'o3',
+  'OpenAI:o3-mini':                'o3-mini',
+  'Google:Gemini 2.5 Pro':         'gemini-2.5-pro',
+  'Google:Gemini 2.5 Flash':       'gemini-2.5-flash',
+  'Google:Gemini 2.0 Flash':       'gemini-2.0-flash',
+  'xAI:Grok 4':                    'grok-4',
+  'xAI:Grok 3':                    'grok-3',
+  'xAI:Grok 3 mini':               'grok-3-mini',
+  'DeepSeek:DeepSeek V4':          'deepseek-chat',
+  'DeepSeek:DeepSeek R2':          'deepseek-reasoner',
+};
+function _isModelRelaySupported(vendor, name) {
+  return !!(LLM_RELAY_PROVIDERS[vendor] && MODEL_API_ID[vendor + ':' + name]);
+}
+const BYOK_KEY_STORAGE_PREFIX = 'gov_byok_key_';
+function saveByokKey(modelKey, key) {
+  try { if (key) localStorage.setItem(BYOK_KEY_STORAGE_PREFIX + modelKey, key); else localStorage.removeItem(BYOK_KEY_STORAGE_PREFIX + modelKey); } catch(e) {}
+}
+function loadByokKey(modelKey) {
+  try { return localStorage.getItem(BYOK_KEY_STORAGE_PREFIX + modelKey) || ''; } catch(e) { return ''; }
+}
+// 지금 유효한 BYOK 설정을 돌려준다 — 단일 모드 + 지원 벤더 + 키 등록까지
+// 전부 갖춰졌을 때만 값을 반환한다. 하나라도 빠지면 null(=공유 계정 사용).
+function _activeByok() {
+  if (modelMode !== 'single' || selectedModels.length !== 1) return null;
+  const key = selectedModels[0];
+  const [vendor, name] = key.split(':');
+  if (!_isModelRelaySupported(vendor, name)) return null;
+  const apiKey = loadByokKey(key);
+  if (!apiKey) return null;
+  return { vendor, name, apiKey, ...LLM_RELAY_PROVIDERS[vendor], model: MODEL_API_ID[key] };
+}
+async function _llmRelayCall(byok, messages, opts = {}) {
+  const { maxTokens = 1200, stream = false, onChunk = null } = opts;
+  const resp = await fetch(PROXY + '/llm/relay', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      provider: byok.provider, baseUrl: byok.baseUrl, apiKey: byok.apiKey, model: byok.model,
+      messages, max_tokens: maxTokens, stream,
+    })
+  });
+  if (stream) {
+    let fullText = '';
+    await _pumpSSE(resp, (json) => {
+      const delta = json.choices?.[0]?.delta?.content || '';
+      if (delta) { fullText += delta; onChunk && onChunk(delta, fullText); }
+    });
+    return fullText;
+  }
+  let data;
+  try { data = await resp.json(); } catch(e) { throw new Error(`HTTP ${resp.status}`); }
+  if (!resp.ok || data.error) throw new Error(data.error?.message || data.error || data.message || `HTTP ${resp.status}`);
+  return data.choices?.[0]?.message?.content || '';
+}
+
+let modelMode = localStorage.getItem('gov_model_mode') || 'single';
+let selectedModels = (() => {
+  try { return JSON.parse(localStorage.getItem('gov_selected_models') || '[]'); } catch(e) { return []; }
+})();
+
+function setModelMode(mode) {
+  modelMode = mode;
+  localStorage.setItem('gov_model_mode', mode);
+  document.getElementById('mode-single').classList.toggle('active', mode === 'single');
+  document.getElementById('mode-ensemble').classList.toggle('active', mode === 'ensemble');
+  // 단일 모드로 되돌아가면 선택을 1개로 축소
+  if (mode === 'single' && selectedModels.length > 1) {
+    selectedModels = selectedModels.slice(0, 1);
+    localStorage.setItem('gov_selected_models', JSON.stringify(selectedModels));
+  }
+  renderModelList();
+}
+
+function toggleModel(key) {
+  const [vendor, name] = key.split(':');
+  if (!_isModelRelaySupported(vendor, name)) {
+    _micShowMsg?.('<strong>⚙️ 아직 연동되지 않은 모델입니다.</strong> 지금은 OpenAI·Google·xAI·DeepSeek만 자기 API 키로 사용할 수 있습니다.', 'info');
+    return;
+  }
+  if (modelMode === 'ensemble') {
+    _micShowMsg?.('<strong>⚙️ 앙상블(여러 모델 토론)은 아직 준비 중입니다.</strong> 지금은 단일 모델만 선택해 주세요.', 'info');
+    return;
+  }
+  selectedModels = [key];
+  localStorage.setItem('gov_selected_models', JSON.stringify(selectedModels));
+  renderModelList();
+  renderByokKeyInput();
+}
+
+function renderModelList() {
+  const q = (document.getElementById('model-search')?.value || '').trim().toLowerCase();
+  const list = document.getElementById('model-list');
+  if (!list) return;
+  const filtered = MODEL_CATALOG.filter(m =>
+    !q || m.name.toLowerCase().includes(q) || m.vendor.toLowerCase().includes(q)
+  );
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="model-empty">검색 결과가 없어요.</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(m => {
+    const key = m.vendor + ':' + m.name;
+    const sel = selectedModels.includes(key);
+    const supported = _isModelRelaySupported(m.vendor, m.name);
+    const disabledCls = supported ? '' : ' model-item-disabled';
+    const badge = supported ? '' : '<span class="model-flag" style="color:var(--hint)">연동 준비중</span>';
+    return `<div class="model-item ${sel?'selected':''}${disabledCls}" onclick="toggleModel('${key.replace(/'/g,"\\'")}')">
+      <span class="model-check">${sel ? '✓' : ''}</span>
+      <span class="model-name"><b>${escHtml(m.name)}</b><span>${escHtml(m.vendor)}</span></span>
+      ${badge || `<span class="model-flag">${m.country}</span>`}
+    </div>`;
+  }).join('');
+
+  const cnt = document.querySelector('.ensemble-count');
+  if (modelMode === 'ensemble') {
+    if (!cnt) {
+      const div = document.createElement('div');
+      div.className = 'ensemble-count show';
+      document.getElementById('model-search').insertAdjacentElement('afterend', div);
+    }
+    document.querySelector('.ensemble-count').textContent = `${selectedModels.length}개 모델 선택됨 — 서로 논쟁하여 결론을 도출합니다`;
+    document.querySelector('.ensemble-count').classList.add('show');
+  } else if (cnt) {
+    cnt.classList.remove('show');
+  }
+}
+// 저장된 모드를 시트 버튼에 즉시 반영(최초 로드 시)
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('mode-single')?.classList.toggle('active', modelMode === 'single');
+  document.getElementById('mode-ensemble')?.classList.toggle('active', modelMode === 'ensemble');
+});
 
 // ══════════════════════════════════════════════════════════════
 // 음성 입력 (K-Law 모바일과 동일한 v3.6 패턴)
