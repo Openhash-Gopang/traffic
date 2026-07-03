@@ -582,6 +582,24 @@ function startGreeting() {
   if (conversationState.phase !== 'boot') return;
   const name = k_trafficNickname || '회원';
 
+  // BUG-FIX(2026-07-03, 2차): 1차 수정은 GWP_CTX가 있으면 정적 인사+재질문을
+  // 건너뛰긴 했지만 (a) "확인하고 있습니다…" 말풍선이 곧바로 이어지는 타이핑
+  // 스피너와 의미가 겹쳐 "확인 중"을 두 번 말하는 것처럼 보였고, (b) 그 말풍선이
+  // 사용자 발화보다 먼저 나와 순서가 거꾸로였고, (c) 원래 정적 인사에 있던
+  // 책임범위 고지(응급 신고 안내 등)가 이 경로에서는 통째로 빠졌었다. 이제
+  // 사용자 발화를 먼저 보여준 뒤, 자기소개 대신 반드시 유지해야 하는 고지
+  // 문장만 짧게 보여주고, 곧바로 인터뷰 스피너로 넘어간다.
+  if (GWP_CTX && !_gwpSeedUsed) {
+    _gwpSeedUsed = true;
+    appendBubble('user', `<i>(AI 비서로부터 전달됨)</i><br>${escHtml(GWP_CTX).replace(/
+/g,'<br>')}`);
+    appendBubble('ai', `저는 K-Traffic입니다. 다만 저는 실제 행정처분을 내리거나 신청·신고를 대신 접수할 수 없습니다. 또한 방금 발생한 교통사고처럼 응급 상황이라면 대화 대신 즉시 <b style="color:var(--red)">112 또는 119</b>로 신고해 주셔야 합니다.`);
+    _markGreeted();
+    conversationState.phase = 'interviewing';
+    _handleInterviewTurn(GWP_CTX);
+    return;
+  }
+
   if (!_hasGreetedBefore()) {
     appendBubble('ai', `
       안녕하세요. K-Traffic을 처음 이용하시는군요. 저는 교통행정 안내 AI입니다.<br>
