@@ -512,13 +512,6 @@ async function _govCall(messages, opts = {}) {
   const { interceptPdvTags } = window.PdvHistoryClient;
   const r = await interceptPdvTags(raw, {
     svc: AGENCY_ID, ipv6: _govGuid(),
-    // TODO(확인 필요): 이 앱엔 /pdv/query가 요구하는 {exp, level} 형태의
-    // auth_token을 만드는 기존 로직이 없었다(신규 기능이라 최초 통합).
-    // L1 최소 요구 스코프를 통과시키기 위해 잠정적으로 1시간 유효한 L1
-    // 토큰을 즉석에서 만든다 — 실제 사용자 인증 레벨과 무관하게 항상 L1로
-    // 취급하는 셈이므로, 배포 전 실제 로그인 세션의 인증 레벨을 반영하도록
-    // 교체할 것 (tax_repo와 동일한 임시 조치).
-    authToken: { exp: Math.floor(Date.now()/1000) + 3600, level: 'L1' },
     resumeContext: { messages, opts },
   });
   if (!r) return raw;
