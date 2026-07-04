@@ -4,7 +4,7 @@
  * school/report.js 의 sendToPDV() 패턴 준수
  */
 
-const PROXY   = 'https://gopang-proxy.tensor-city.workers.dev';
+const PROXY   = 'https://hondi-proxy.tensor-city.workers.dev';
 const SVC_ID  = 'traffic'; // K-Health는 'health'로 변경
 const PDV_VER = '1.0';
 

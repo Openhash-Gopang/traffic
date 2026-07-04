@@ -780,7 +780,7 @@ function addLog(tag,msg){
 }
 async function initKakaoSDK(){
   try{
-    const res=await fetch('https://gopang-proxy.tensor-city.workers.dev/kakao/appkey');
+    const res=await fetch('https://hondi-proxy.tensor-city.workers.dev/kakao/appkey');
     if(!res.ok)throw new Error(res.status);
     const{appkey}=await res.json();
     if(!appkey)throw new Error('appkey 없음');

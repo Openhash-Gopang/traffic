@@ -22,7 +22,7 @@
   const LS_PUBKEY      = 'gopang_wallet_pubkey';
   const LS_HANDLE      = 'gopang_wallet_handle';
   const SUPABASE_URL   = 'https://ebbecjfrwaswbdybbgiu.supabase.co';
-  const WORKER_URL     = 'https://gopang-proxy.tensor-city.workers.dev';
+  const WORKER_URL     = 'https://hondi-proxy.tensor-city.workers.dev';
 
   /* ────────────────────────────────────────────────
    *  유틸리티
@@ -547,7 +547,7 @@
  * }, { toGuid: '2001:db8::seller', amount: 15000 });
  *
  * // 5) Worker에 TX 전송
- * await fetch('https://gopang-proxy.tensor-city.workers.dev/biz/order', {
+ * await fetch('https://hondi-proxy.tensor-city.workers.dev/biz/order', {
  *   method : 'POST',
  *   headers: { 'Content-Type': 'application/json' },
  *   body   : JSON.stringify(tx),

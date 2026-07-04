@@ -731,7 +731,7 @@ window._onGopangAuth=function(user){
 };
 function _sendPdvReport(a){
   const u=window._gopangUser;if(!u?.ipv6)return;
-  fetch('https://gopang-proxy.tensor-city.workers.dev/pdv/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({report:{svc:'traffic',type:a.type||'action',who:{ipv6:u.ipv6,role:a.role||'user',recipients:['gopang-pdv']},when:{generated_at:new Date().toISOString(),period_start:new Date().toISOString(),period_end:new Date().toISOString()},where:{svc_url:'https://traffic.hondi.net',label:a.label||'/user-dashboard'},what:{summary:a.summary},how:{method:'subsystem-auth',auth_level:u.level||'L0'},why:{goal:a.goal||'사용자 대시보드 조회'}}})}).catch(()=>{});
+  fetch('https://hondi-proxy.tensor-city.workers.dev/pdv/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({report:{svc:'traffic',type:a.type||'action',who:{ipv6:u.ipv6,role:a.role||'user',recipients:['gopang-pdv']},when:{generated_at:new Date().toISOString(),period_start:new Date().toISOString(),period_end:new Date().toISOString()},where:{svc_url:'https://traffic.hondi.net',label:a.label||'/user-dashboard'},what:{summary:a.summary},how:{method:'subsystem-auth',auth_level:u.level||'L0'},why:{goal:a.goal||'사용자 대시보드 조회'}}})}).catch(()=>{});
 }
 window._sendPdvReport=_sendPdvReport;
 </script>

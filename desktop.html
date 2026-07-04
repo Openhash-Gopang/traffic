@@ -1124,7 +1124,7 @@ function show(id, btn) {
 }
 
 /* AI 채팅 */
-const PROXY_URL = 'https://gopang-proxy.tensor-city.workers.dev';
+const PROXY_URL = 'https://hondi-proxy.tensor-city.workers.dev';
 
 const SYS = `당신은 K-Traffic의 핵심 AI 매칭 엔진입니다.
 고팡(Gopang) 생태계의 교통·물류 플랫폼에서 동작하며,
@@ -1337,7 +1337,7 @@ async function _sendPdvReport(action) {
   const user = window._gopangUser;
   if (!user?.ipv6) return;
   try {
-    await fetch('https://gopang-proxy.tensor-city.workers.dev/pdv/report', {
+    await fetch('https://hondi-proxy.tensor-city.workers.dev/pdv/report', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ report: {
