@@ -457,7 +457,14 @@ async function _fetchKPublicCommonClient() {
   if (_kPublicCommonClientCache) return _kPublicCommonClientCache;
   try {
     const r = await fetch(K_PUBLIC_COMMON_RAW_URL, { cache: 'no-cache' });
-    if (r.ok) { _kPublicCommonClientCache = await r.text(); return _kPublicCommonClientCache; }
+    if (r.ok) {
+      // 2026-07-04b: 서버(/gov/relay)는 P11 scope 자리표시자를 치환해주지만,
+      // BYOK 경로는 이 원문을 그대로 쓰므로 여기서도 동일하게 치환해야 한다 —
+      // 안 그러면 BYOK 사용자에게만 자리표시자 문자열이 그대로 노출된다.
+      const raw = await r.text();
+      _kPublicCommonClientCache = raw.replace(/\{본인 서비스의 VALID_PDV_SCOPES 값\}/g, 'ktraffic');
+      return _kPublicCommonClientCache;
+    }
   } catch(e) { console.warn('[BYOK] K-Traffic 공통 규칙 로드 실패:', e.message); }
   return ''; // 실패해도 agencyPrompt만으로 서비스 지속
 }
