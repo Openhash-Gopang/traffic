@@ -969,6 +969,7 @@ async function _llmRelayCall(byok, messages, opts = {}) {
     body: JSON.stringify({
       provider: byok.provider, baseUrl: byok.baseUrl, apiKey: byok.apiKey, model: byok.model,
       messages, max_tokens: maxTokens, stream,
+      service_id: 'ktransport', // 2026-07-05: worker.js가 UNIVERSAL-INTEGRITY/UNIVERSAL-common 강제 주입
     })
   });
   if (stream) {
