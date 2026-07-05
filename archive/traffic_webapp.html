@@ -1,0 +1,668 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script src="/gopang-wallet.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>K-Traffic</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2563eb">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Inter',-apple-system,sans-serif;font-size:15px;line-height:1.5;color:#111827;background:#f8f9fa;-webkit-font-smoothing:antialiased;overflow:hidden;}
+a{text-decoration:none;color:inherit}
+button{font-family:'Inter',sans-serif;cursor:pointer;border:none}
+:root{
+  --blue:#2563eb;--blue-dk:#1d4ed8;--blue-bg:#eff6ff;
+  --green:#10b981;--green-bg:#ecfdf5;
+  --orange:#ea580c;--orange-bg:#fff7ed;
+  --danger:#ef4444;--danger-bg:#fef2f2;
+  --border:#e5e7eb;--txt2:#4b5563;--txt3:#6b7280;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+.app{display:flex;flex-direction:column;height:100%;max-width:480px;margin:0 auto;background:#f8f9fa;position:relative}
+
+/* 상단 바 */
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;z-index:10}
+.topbar-logo{display:flex;align-items:center;gap:8px}
+.topbar-mark{width:30px;height:30px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.topbar-mark svg{width:14px;height:14px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.topbar-name{font-size:16px;font-weight:800;color:#111}
+.topbar-right{margin-left:auto;display:flex;gap:6px}
+.tb-btn-blue{padding:7px 12px;border-radius:8px;font-size:12px;font-weight:700;background:var(--blue);color:#fff}
+.tb-btn-danger{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;background:var(--danger-bg);color:var(--danger);border:1.5px solid #fca5a5}
+
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+
+/* 화면 */
+.screen{display:none;animation:fadeIn .2s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* 홈 히어로 */
+.home-hero{background:linear-gradient(135deg,var(--blue-dk) 0%,#1e40af 100%);padding:20px 16px;color:#fff}
+.home-hero-title{font-size:18px;font-weight:800;margin-bottom:4px}
+.home-hero-sub{font-size:13px;opacity:.8}
+.hero-stats-row{display:flex;gap:10px;margin-top:14px}
+.hstat-mini{flex:1;background:rgba(255,255,255,.15);border-radius:10px;padding:10px;text-align:center}
+.hsm-val{font-size:16px;font-weight:800;line-height:1.1}
+.hsm-lbl{font-size:10px;opacity:.7;margin-top:2px}
+
+/* 입력 폼 */
+.section-label{font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;padding:16px 16px 8px}
+.input-card{margin:0 16px 12px;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:14px}
+.f-label{font-size:12px;font-weight:600;color:#374151;margin-bottom:5px;display:block}
+.f-input{width:100%;padding:10px 12px;border-radius:8px;border:1.5px solid var(--border);font-family:'Inter',sans-serif;font-size:14px;outline:none;margin-bottom:10px}
+.f-input:focus{border-color:var(--blue)}
+.f-btn{width:100%;padding:12px;border-radius:9px;background:var(--blue);color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer}
+
+/* 차량 카드 */
+.vehicle-card{margin:0 16px 10px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .15s}
+.vehicle-card:active{border-color:var(--blue)}
+.v-type{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.vt-taxi{color:var(--orange)}.vt-bus{color:var(--blue-dk)}.vt-car{color:var(--green)}
+.v-name{font-size:15px;font-weight:700;color:#111;margin-bottom:3px}
+.v-info{font-size:12px;color:var(--txt3);margin-bottom:8px}
+.v-row{display:flex;gap:8px;font-size:12px;color:var(--txt3);margin-bottom:10px}
+.v-avail{color:var(--green);font-weight:600}
+.v-btn{width:100%;padding:10px;border-radius:8px;background:var(--blue);color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer}
+
+/* GDC 카드 */
+.gdc-mini{margin:0 16px 12px;background:linear-gradient(135deg,#1e3a5f,#1e40af);border-radius:12px;padding:16px;color:#fff}
+.gdc-mini-bal{font-size:26px;font-weight:900;letter-spacing:-1px}
+.gdc-mini-lbl{font-size:11px;color:#93c5fd;margin-top:2px}
+.gdc-mini-btns{display:flex;gap:8px;margin-top:12px}
+.gdc-mini-btn{flex:1;padding:8px;border-radius:7px;font-size:12px;font-weight:700;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2);cursor:pointer}
+
+/* 채팅 */
+.chat-screen{display:none;flex-direction:column;height:100%}
+.chat-screen.active{display:flex}
+.chat-header{background:#fff;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.chat-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#7c3aed);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chat-avatar svg{width:16px;height:16px;stroke:#fff;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.chat-header-name{font-size:14px;font-weight:700}
+.chat-header-status{font-size:11px;color:var(--blue-dk);font-weight:500;display:flex;align-items:center;gap:4px}
+.chat-header-status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--blue);display:inline-block}
+.chat-back{padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;color:#374151;background:#f3f4f6;border:none;cursor:pointer}
+.chat-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px;display:flex;flex-direction:column;gap:10px;background:#f8f9fa}
+.b-ai{max-width:88%;align-self:flex-start;background:#fff;border:1px solid var(--border);border-radius:4px 14px 14px 14px;padding:10px 13px;font-size:14px;line-height:1.7;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.b-user{max-width:88%;align-self:flex-end;background:var(--blue);color:#fff;border-radius:14px 14px 4px 14px;padding:10px 13px;font-size:14px;line-height:1.7}
+.quick-row{display:flex;flex-wrap:wrap;gap:6px;align-self:flex-start}
+.qb{background:#fff;border:1.5px solid var(--border);border-radius:18px;padding:5px 11px;font-size:12px;font-weight:600;color:#374151;cursor:pointer}
+.qb:active{background:var(--blue-bg);border-color:var(--blue);color:var(--blue-dk)}
+.chat-input-area{background:#fff;border-top:1px solid var(--border);padding:10px 12px;padding-bottom:calc(10px + var(--safe-b));display:flex;gap:8px;align-items:flex-end;flex-shrink:0}
+.chat-textarea{flex:1;background:#f3f4f6;border:1px solid var(--border);border-radius:20px;padding:9px 14px;font-family:'Inter',sans-serif;font-size:14px;resize:none;outline:none;max-height:100px;transition:border-color .15s}
+.chat-textarea:focus{border-color:var(--blue);background:#fff}
+.chat-send-btn{width:38px;height:38px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:none;cursor:pointer}
+.chat-send-btn:disabled{background:#bfdbfe}
+.chat-send-btn svg{width:16px;height:16px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+/* 탭 바 */
+.tab-bar{background:#fff;border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe-b);flex-shrink:0;z-index:10}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 6px;cursor:pointer;font-size:9px;font-weight:600;color:var(--txt3);background:none;border:none;transition:color .15s}
+.tab-item.active{color:var(--blue-dk)}
+.tab-icon{font-size:20px;line-height:1}
+
+/* 이동 내역 */
+.history-item{margin:0 16px 10px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:13px}
+.hi-route{font-size:14px;font-weight:700;color:#111;margin-bottom:3px}
+.hi-detail{font-size:12px;color:var(--txt3)}
+.badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px}
+.b-ok{background:var(--green-bg);color:#065f46}
+.b-done{background:#f1f5f9;color:#475569}
+
+/* 바텀 시트 */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:flex-end}
+.modal-bg.open{display:flex}
+.modal-sheet{width:100%;background:#fff;border-radius:20px 20px 0 0;padding:24px 16px;padding-bottom:calc(24px + var(--safe-b));max-height:80vh;overflow-y:auto}
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:#d1d5db;margin:0 auto 20px}
+.sheet-title{font-size:17px;font-weight:800;margin-bottom:16px}
+
+/* 토스트 */
+.toast{position:fixed;top:70px;left:16px;right:16px;background:#111;color:#fff;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(-10px);transition:all .25s}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* 마이크 버튼 */
+.chat-mic-btn{width:38px;height:38px;border-radius:50%;background:#f3f4f6;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:background .15s}
+.chat-mic-btn.active{background:#fee2e2;border-color:#fca5a5}
+.chat-mic-btn svg{width:16px;height:16px;stroke:#374151;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.chat-mic-btn.active svg{stroke:var(--danger)}
+</style>
+<script type="module" src="https://hondi.net/auth/subsystem-auth.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-mark"><svg viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
+      <span class="topbar-name">K-Traffic</span>
+    </div>
+    <div class="topbar-right">
+      <span id="auth-badge" style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:#f0fdf9;color:#1d6f4e;border:1px solid #a7f3d0;display:none">L0</span>
+      <button class="tb-btn-danger" onclick="showScreen('emergency')">🚨 긴급</button>
+    </div>
+  </div>
+
+  <div class="content" id="content-area">
+
+    <!-- 홈 -->
+    <div class="screen active" id="screen-home">
+      <div class="home-hero">
+        <div class="home-hero-title">어디로 이동하시나요? 👋</div>
+        <div class="home-hero-sub">동선이 겹치는 차량을 찾아 GDC로 자동 결제합니다</div>
+        <div class="hero-stats-row">
+          <div class="hstat-mini"><div class="hsm-val">24h</div><div class="hsm-lbl">365일 운영</div></div>
+          <div class="hstat-mini"><div class="hsm-val">3분</div><div class="hsm-lbl">평균 매칭</div></div>
+          <div class="hstat-mini"><div class="hsm-val">PDV</div><div class="hsm-lbl">신원 인증</div></div>
+        </div>
+      </div>
+
+      <div class="section-label">🚗 빠른 이동 요청</div>
+      <div class="input-card">
+        <label class="f-label">출발지</label>
+        <input class="f-input" placeholder="예: 한림읍 한림로 123" id="mob-from">
+        <label class="f-label">목적지</label>
+        <input class="f-input" placeholder="예: 제주도청" id="mob-to" style="margin-bottom:12px">
+        <button class="f-btn" onclick="mobSearch()">차량 탐색하기</button>
+      </div>
+
+      <div class="gdc-mini">
+        <div class="gdc-mini-lbl">내 GDC 잔액</div>
+        <div class="gdc-mini-bal">247.5 <span style="font-size:14px;font-weight:500;color:#93c5fd">GDC</span></div>
+        <div class="gdc-mini-btns">
+          <button class="gdc-mini-btn" onclick="toast('💰 GDC 충전 페이지')">충전</button>
+          <button class="gdc-mini-btn" onclick="showScreen('history')">이용 내역</button>
+        </div>
+      </div>
+
+      <div class="section-label">📋 최근 이동</div>
+      <div class="history-item">
+        <div class="hi-route">한림읍 → 제주도청</div>
+        <div class="hi-detail">2026.05.31 09:28 · 김○○ · 8 GDC</div>
+      </div>
+      <div class="history-item">
+        <div class="hi-route">제주공항 → 서귀포시</div>
+        <div class="hi-detail">2026.05.29 14:10 · 이○○ · 22 GDC</div>
+      </div>
+      <div style="padding-bottom:16px"></div>
+    </div>
+
+    <!-- 차량 탐색 결과 -->
+    <div class="screen" id="screen-vehicles">
+      <div class="section-label">🔍 매칭 차량 (동선 겹침 순)</div>
+      <div class="vehicle-card">
+        <div class="v-type vt-car">🚗 자가용 공유</div>
+        <div class="v-name">김○○ (고팡 등록 · 신뢰 4.9)</div>
+        <div class="v-info">제주 12가 3456 · 동선 겹침 92%</div>
+        <div class="v-row"><span class="v-avail">● 이동 중</span><span>예상 요금 8 GDC</span></div>
+        <button class="v-btn" onclick="requestRide('김○○', 8)">탑승 요청 (8 GDC)</button>
+      </div>
+      <div class="vehicle-card">
+        <div class="v-type vt-taxi">🚕 택시</div>
+        <div class="v-name">이○○ 기사 (고팡 등록 · 신뢰 4.7)</div>
+        <div class="v-info">제주 34나 5678 · 동선 겹침 78%</div>
+        <div class="v-row"><span class="v-avail">● 대기 중</span><span>예상 요금 12 GDC</span></div>
+        <button class="v-btn" onclick="requestRide('이○○', 12)">탑승 요청 (12 GDC)</button>
+      </div>
+      <div class="vehicle-card">
+        <div class="v-type vt-bus">🚌 버스</div>
+        <div class="v-name">제주 702번 (고팡 연계)</div>
+        <div class="v-info">10분 후 출발 · 동선 겹침 65%</div>
+        <div class="v-row"><span class="v-avail">● 10분 후</span><span>요금 2 GDC</span></div>
+        <button class="v-btn" onclick="requestRide('702번 버스', 2)">탑승 예약 (2 GDC)</button>
+      </div>
+      <div style="padding:0 16px 16px">
+        <button style="width:100%;padding:11px;border-radius:9px;background:transparent;border:1.5px solid var(--border);font-size:14px;font-weight:600;color:#374151;cursor:pointer" onclick="showScreen('home')">← 다시 입력하기</button>
+      </div>
+    </div>
+
+    <!-- 이용 기록 -->
+    <div class="screen" id="screen-history">
+      <div class="section-label">📋 이동·물류 기록 (PDV 저장)</div>
+      <div class="history-item">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div class="hi-route">한림읍 → 제주도청</div>
+          <span class="badge b-done">완료</span>
+        </div>
+        <div class="hi-detail">2026.05.31 09:28 · 김○○ · -8 GDC · ⭐ 5.0</div>
+      </div>
+      <div class="history-item">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div class="hi-route">제주공항 → 서귀포시</div>
+          <span class="badge b-done">완료</span>
+        </div>
+        <div class="hi-detail">2026.05.29 14:10 · 이○○ · -22 GDC · ⭐ 4.8</div>
+      </div>
+      <div style="padding-bottom:16px"></div>
+    </div>
+
+    <!-- 긴급 -->
+    <div class="screen" id="screen-emergency">
+      <div style="background:linear-gradient(135deg,#7f1d1d,#991b1b);padding:24px 16px;color:#fff;text-align:center">
+        <div style="font-size:40px;margin-bottom:8px">🚨</div>
+        <div style="font-size:18px;font-weight:800;margin-bottom:6px">긴급 신고</div>
+        <div style="font-size:13px;opacity:.8">현재 위치와 탑승 기록이 자동 전송됩니다</div>
+        <button onclick="toast('🚨 112 연결 중… 위치·탑승 기록 전송 중')" style="width:100%;margin-top:16px;padding:16px;background:#fff;color:#991b1b;border:none;border-radius:10px;font-size:16px;font-weight:900;cursor:pointer">📞 112 연결</button>
+      </div>
+      <div style="padding:16px">
+        <div style="background:var(--orange-bg);border-radius:10px;padding:14px;border:1px solid #fed7aa;font-size:13px">
+          <div style="font-weight:700;color:#9a3412;margin-bottom:6px">📞 긴급 연락처</div>
+          <div style="display:flex;flex-direction:column;gap:4px;color:var(--txt2)">
+            <span>🚨 경찰 <strong>112</strong></span>
+            <span>🚑 응급구조 <strong>119</strong></span>
+            <span>☎ 고팡 고객센터 <strong>1588-0000</strong></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- AI 채팅 -->
+  <div class="chat-screen" id="chat-screen">
+    <div class="chat-header">
+      <button class="chat-back" onclick="hideChatScreen()">← 닫기</button>
+      <div class="chat-avatar"><svg viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></div>
+      <div>
+        <div class="chat-header-name">K-Traffic 전문가</div>
+        <div class="chat-header-status">24시간 응답</div>
+      </div>
+    </div>
+    <div class="chat-body" id="mob-chat-body">
+      <div class="b-ai">안녕하세요! K-Traffic입니다. 🚗<br><br>출발지와 목적지를 말씀해 주시면 동선이 겹치는 차량을 찾아드립니다. GDC 자동 결제, 물류 배송도 처리합니다.<br><br><em style="font-size:12px;color:var(--txt3)">※ 모든 기록은 PDV에 저장됩니다</em></div>
+      <div class="quick-row">
+        <button class="qb" onclick="qs('한림읍에서 도청까지')">🏢 한림→도청</button>
+        <button class="qb" onclick="qs('공항에서 서귀포까지')">✈️ 공항→서귀포</button>
+        <button class="qb" onclick="qs('화물 배송 요청')">📦 화물</button>
+        <button class="qb" onclick="qs('GDC 잔액 확인')">💰 GDC</button>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <textarea class="chat-textarea" id="mob-input" rows="1"
+        placeholder="출발지·목적지를 말씀해 주세요…"
+        oninput="autoResize(this);updateSendBtn()"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();mobSend()}"></textarea>
+      <button class="chat-mic-btn" id="mob-mic-btn" onclick="toggleMic()">
+        <svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+      </button>
+      <button class="chat-send-btn" id="mob-send-btn" onclick="mobSend()" disabled>
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="tab-bar" id="tab-bar">
+    <button class="tab-item active" onclick="showScreen('home',this)"><div class="tab-icon">🏠</div>홈</button>
+    <button class="tab-item" onclick="showChatScreen()"><div class="tab-icon">🚗</div>상담</button>
+    <button class="tab-item" onclick="showScreen('vehicles',this)"><div class="tab-icon">🔍</div>차량 탐색</button>
+    <button class="tab-item" onclick="showScreen('history',this)"><div class="tab-icon">📋</div>기록</button>
+    <button class="tab-item" onclick="showScreen('emergency',this)" style="color:var(--danger)"><div class="tab-icon">🚨</div>긴급</button>
+  </div>
+</div>
+
+<!-- 바텀 시트 -->
+<div class="modal-bg" id="ride-sheet">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="ride-sheet-title">탑승 확인</div>
+    <div id="ride-sheet-body" style="font-size:13px;color:var(--txt2);line-height:1.8;margin-bottom:16px"></div>
+    <div style="background:#eff6ff;border-radius:8px;padding:10px;font-size:12px;color:var(--txt2);margin-bottom:12px">🔐 탑승 완료 즉시 GDC가 자동 이체되며, 전 과정이 양측 PDV에 기록됩니다.</div>
+    <button style="width:100%;padding:13px;border-radius:10px;background:var(--blue);color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer" onclick="confirmRide()">탑승 요청 확정</button>
+    <button style="width:100%;padding:12px;border-radius:10px;background:transparent;border:1px solid var(--border);color:#374151;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px" onclick="closeSheet()">취소</button>
+  </div>
+</div>
+
+<div class="toast" id="mob-toast"></div>
+
+<script>
+// ── 상수 ──────────────────────────────────────────────────────
+const PROXY = 'https://hondi-proxy.tensor-city.workers.dev';
+const SP_URL = 'https://raw.githubusercontent.com/Openhash-Gopang/traffic/main/prompts/SP-KTRAFFIC-v1_0.txt';
+const SP_FALLBACK = `당신은 K-Traffic의 핵심 AI 매칭 엔진입니다.
+고팡(Gopang) 생태계의 교통·물류 플랫폼에서 동작하며,
+신규 이동·물류 수요를 분석하여 기존 운행 중이거나 운행 예정인
+고팡 사용자(차량)를 하나 이상 조합해 최적의 동선을 구성합니다.
+
+[플랫폼 아키텍처]
+Openhash 계층: L1(읍면동)→L2(시군구)→L3(광역시도)→L4(국가)→L5(글로벌)
+탐색 원칙: 동선이 L1 이내이면 L2로 전달하지 않음. L2 이내이면 L3 전달 없음.
+고팡 블랙박스: 모든 차량이 1분 단위로 위치·동선을 Openhash L1 서버에 전송.
+PDV: 모든 거래는 양측 PDV에 암호화 기록. L1 미만 차량은 추천 제외.
+GDC: 기본요금 2 GDC(5km 이내), 추가 0.3 GDC/km. 완료 즉시 자동 이체.
+
+[역할]
+STEP 1. 수요 분석: 유형(이동/물류), 출발지, 목적지, 화물 종류·중량, 시간 조건, Openhash 레벨 판별
+STEP 2. 차량 탐색: 동선 겹침 + PDV L1 이상 + 적재 가능 차량 선정
+STEP 3. 릴레이 조합: 장거리는 중간 환승 거점(휴게소·터미널·물류센터)에서 복수 차량 조합
+STEP 4. 결과 제시: 수요자 요약 + 운전자별 수령·전달·인수인계 메시지 생성
+
+[응답 형식]
+① 사용자 요약: 매칭 차량, 예상 소요, GDC 요금
+② 운전자 메시지 블록 (차량별):
+  📍 수령 장소 / 📦 수령 물품 / 🏁 전달 장소 / 🔄 인수인계 / ⏰ 시간 / 💰 GDC / 🔐 PDV 기록
+
+[규칙]
+- 출발지·목적지 불명확 시 먼저 질문
+- 화물: 품목·수량·중량 확인, 위험물 거절
+- 운전자 성명은 성+○○으로 마스킹 (예: 김○○)
+- 차량 없을 시 솔직히 안내 후 운전자 모집 메시지 생성
+- 응답 끝에 수요 ID(DM-XXXX), Openhash 레벨, PDV 기록 예고 포함
+- 모바일 환경: 짧고 명확하게, 한국어로만
+
+[주요 환승 거점]
+경부고속도로: 죽전·안성·천안삼거리·금강·추풍령·칠곡
+영동: 여주·횡성·강릉 / 서해안: 행담도·서산·고창
+고속버스터미널: 서울강남·동서울·부산·대전·광주·대구
+물류센터: 이천·군포·부산신항·대전
+제주: 국제공항·제주항·한림항·제주도청·서귀포시청`;
+
+// ── SP 동적 로드 (§5, §10) ────────────────────────────────────
+const CFG = { systemPrompt: null };
+async function loadSystemPrompt() {
+  if (CFG.systemPrompt) return CFG.systemPrompt;
+  try {
+    const r = await fetch(SP_URL + '?t=' + Date.now());
+    if (r.ok) { CFG.systemPrompt = await r.text(); return CFG.systemPrompt; }
+  } catch(e) { console.warn('[SP] 로드 실패:', e.message); }
+  CFG.systemPrompt = SP_FALLBACK;
+  return CFG.systemPrompt;
+}
+
+// ── AI 호출 ───────────────────────────────────────────────────
+async function callAI(messages) {
+  const sp = await loadSystemPrompt();
+  try {
+    const r = await fetch(`${PROXY}/ai/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: 'deepseek',
+        model: 'deepseek-chat',
+        system: sp,
+        messages,
+        max_tokens: 2000,
+      }),
+    });
+    if (!r.ok) throw new Error(`proxy ${r.status}`);
+    const d = await r.json();
+    return d.content || '잠시 후 다시 시도해 주세요.';
+  } catch(e) {
+    console.warn('[K-Traffic] DeepSeek 폴백 → Claude:', e.message);
+    const r2 = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, system: sp, messages: messages.slice(-8) }),
+    });
+    const d2 = await r2.json();
+    return d2.content?.find(c => c.type === 'text')?.text || '오류가 발생했습니다.';
+  }
+}
+
+// ── UI 헬퍼 — autoResize / updateSendBtn (§4) ─────────────────
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+function updateSendBtn() {
+  const inp = document.getElementById('mob-input');
+  const btn = document.getElementById('mob-send-btn');
+  if (btn) btn.disabled = !inp.value.trim();
+}
+
+// ── 화면 전환 ─────────────────────────────────────────────────
+let hist = [];
+function showScreen(id, tabEl) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const s = document.getElementById('screen-' + id);
+  if (s) s.classList.add('active');
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  if (tabEl) tabEl.classList.add('active');
+  document.getElementById('content-area').scrollTop = 0;
+  document.getElementById('chat-screen').classList.remove('active');
+  document.getElementById('tab-bar').style.display = 'flex';
+}
+function showChatScreen() {
+  document.getElementById('chat-screen').classList.add('active');
+  document.getElementById('tab-bar').style.display = 'none';
+  // ★ focus() 미호출 — 안드로이드 소프트 키보드 강제 팝업 방지 (§3.6)
+}
+function hideChatScreen() {
+  document.getElementById('chat-screen').classList.remove('active');
+  document.getElementById('tab-bar').style.display = 'flex';
+}
+
+// ── 차량 탐색 ─────────────────────────────────────────────────
+function mobSearch() {
+  const from = document.getElementById('mob-from').value.trim();
+  const to   = document.getElementById('mob-to').value.trim();
+  if (!from || !to) { toast('출발지와 목적지를 입력해 주세요.'); return; }
+  toast('🔍 동선이 겹치는 차량을 탐색 중…');
+  setTimeout(() => { showScreen('vehicles'); toast('✅ 3개 차량을 찾았습니다!'); }, 1000);
+}
+function requestRide(name, gdc) {
+  document.getElementById('ride-sheet-title').textContent = `${name} 탑승 요청`;
+  document.getElementById('ride-sheet-body').innerHTML =
+    `<strong>운전자:</strong> ${name}<br><strong>요금:</strong> ${gdc} GDC (탑승 완료 즉시 자동 이체)<br><strong>신원:</strong> PDV 상호 확인 예정`;
+  document.getElementById('ride-sheet').classList.add('open');
+}
+function confirmRide() {
+  closeSheet();
+  toast('📨 탑승 요청 전송 완료! PDV 신원 확인 중…');
+}
+function closeSheet() { document.getElementById('ride-sheet').classList.remove('open'); }
+document.getElementById('ride-sheet').addEventListener('click', e => { if (e.target.id === 'ride-sheet') closeSheet(); });
+
+// ── 채팅 전송 ─────────────────────────────────────────────────
+async function mobSend() {
+  const inp = document.getElementById('mob-input');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+  autoResize(inp);
+  updateSendBtn();
+  addMob(msg, 'user');
+  hist.push({ role: 'user', content: msg });
+  const btn = document.getElementById('mob-send-btn');
+  btn.disabled = true;
+  const tid = addMob('…', 'ai');
+  try {
+    const txt = await callAI(hist.slice(-10));
+    document.getElementById(tid)?.remove();
+    addMob(txt, 'ai');
+    hist.push({ role: 'assistant', content: txt });
+    // PDV 기록 — 표준 중첩 구조 (§4 갱신)
+    _recordPdv(msg, txt);
+  } catch(e) {
+    document.getElementById(tid)?.remove();
+    addMob('오류가 발생했습니다. 다시 시도해 주세요.', 'ai');
+  }
+  btn.disabled = false;
+}
+
+// PDV 표준 payload { user_guid, source, report: { pdv_6w } }
+function _recordPdv(userMsg, aiReply) {
+  try {
+    const token = JSON.parse(sessionStorage.getItem('gopang_sso_token') || '{}');
+    const user_guid = token.ipv6 || 'anonymous';
+    const payload = {
+      user_guid,
+      source: 'ktransport',
+      report: {
+        pdv_6w: {
+          who:   user_guid,
+          when:  new Date().toISOString(),
+          where: window._gopangLocation || '위치 미확인',
+          what:  'K-Traffic AI 채팅',
+          how:   `사용자: ${userMsg.slice(0, 60)}`,
+          why:   '교통·물류 수요 매칭',
+        },
+      },
+    };
+    // subsystem-auth.js가 제공하는 헬퍼 우선, 없으면 직접 fetch
+    if (window._sendPdvReport) {
+      window._sendPdvReport(payload);
+    } else {
+      fetch(`${PROXY}/pdv_log`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).catch(() => {});
+    }
+  } catch(e) { console.warn('[PDV]', e.message); }
+}
+
+let mc = 0;
+function addMob(text, type) {
+  const id = 'mb' + (mc++);
+  const body = document.getElementById('mob-chat-body');
+  const d = document.createElement('div');
+  d.id = id;
+  d.className = type === 'user' ? 'b-user' : 'b-ai';
+  d.innerHTML = text.replace(/\n/g, '<br>');
+  body.appendChild(d);
+  body.scrollTop = 99999;
+  return id;
+}
+function qs(s) { document.getElementById('mob-input').value = s; updateSendBtn(); mobSend(); }
+
+function toast(msg) {
+  const t = document.getElementById('mob-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── ctx 파라미터 — ctx_enc=b64 분기 (§6-4) ───────────────────
+(function initCtx() {
+  const params  = new URLSearchParams(location.search);
+  const ctxRaw  = params.get('ctx') || '';
+  const ctxEnc  = params.get('ctx_enc');
+  const ctx = ctxRaw
+    ? (ctxEnc === 'b64'
+        ? decodeURIComponent(escape(atob(ctxRaw)))
+        : decodeURIComponent(ctxRaw))
+    : null;
+  if (ctx) { showChatScreen(); setTimeout(() => qs(ctx), 300); }
+})();
+
+// ── 마이크 — v3.6 패턴 (§3.5) ────────────────────────────────
+let micActive = false;
+let recognition = null;
+let mediaRecorder = null;
+let audioChunks = [];
+
+function _micSetUI(active) {
+  micActive = active;
+  const btn = document.getElementById('mob-mic-btn');
+  if (btn) btn.classList.toggle('active', active);
+}
+
+// ★ 절대 금지: getUserMedia() 선행 호출, dispatchEvent, input.focus()
+function _micStartWebSpeech(SR) {
+  recognition = new SR();
+  recognition.lang           = 'ko-KR';
+  recognition.continuous     = false;
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onresult = (e) => {
+    const t = e.results[0][0].transcript;
+    const input = document.getElementById('mob-input');
+    if (input && t) {
+      input.value = t;
+      autoResize(input);   // ★ 직접 호출
+      updateSendBtn();     // ★ 직접 호출
+    }
+    _micSetUI(false);
+    setTimeout(mobSend, 100); // auto-send
+  };
+
+  recognition.onerror = (e) => {
+    _micSetUI(false);
+    console.warn('[Mic] 오류:', e.error);
+    if (e.error !== 'aborted') toast('🎤 음성 인식 오류: ' + e.error);
+  };
+
+  recognition.onend = () => { _micSetUI(false); };
+
+  recognition.start();
+  _micSetUI(true);
+}
+
+// iOS 폴백 — MediaRecorder + Whisper/STT
+async function _micStartMediaRecorder() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      _micSetUI(false);
+      toast('🎤 음성 처리 중…');
+      // K-Traffic은 텍스트 전용 — MediaRecorder STT는 외부 API 필요
+      // 폴백 안내만 표시
+      toast('🎤 iOS에서는 텍스트로 입력해 주세요.');
+    };
+    mediaRecorder.start();
+    _micSetUI(true);
+  } catch(e) {
+    _micSetUI(false);
+    toast('🎤 마이크 권한이 필요합니다.');
+  }
+}
+
+function toggleMic() {
+  if (micActive) {
+    // 중지
+    if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    _micSetUI(false);
+    return;
+  }
+  // iOS 판별
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!isIOS && SR) {
+    _micStartWebSpeech(SR);
+  } else if (isIOS && window.MediaRecorder) {
+    _micStartMediaRecorder();
+  } else {
+    toast('🎤 이 브라우저에서는 음성 인식을 지원하지 않습니다.');
+  }
+}
+</script>
+<script>
+/* ── 고팡 SSO 인증 콜백 ──
+   subsystem-auth.js(type="module")가 자동으로 initAuth()를 실행하고
+   완료 시 window._onGopangAuth(user)를 호출합니다.
+   하위 시스템은 이 함수만 정의하면 됩니다. */
+window._onGopangAuth = function(user) {
+  if (!user) return;
+  // topbar 인증 레벨 뱃지 표시
+  const badge = document.getElementById('auth-badge');
+  if (badge) {
+    badge.textContent = 'Lv.' + (user.level || 0);
+    badge.style.display = 'inline-block';
+  }
+  // GDC 잔액 영역에 사용자 ID 반영 (선택)
+  const shortId = user.ipv6 ? user.ipv6.slice(-6) : '—';
+  const gdcLbl  = document.querySelector('.gdc-mini-lbl');
+  if (gdcLbl) gdcLbl.textContent = shortId + ' · GDC 잔액';
+  // sessionStorage에 저장 (pdv.js _getUserIpv6() 참조)
+  try {
+    sessionStorage.setItem('gopang_sso_token', JSON.stringify(user));
+  } catch(e) {}
+  // 로컬 백업 대기 PDV 재전송
+  if (window.PDV && PDV.flushPending) setTimeout(PDV.flushPending, 2000);
+  console.log('[K-Traffic] ✅ 인증 완료 —', user.level, user.ipv6?.slice(-8));
+};
+</script>
+</body>
+</html>
+
