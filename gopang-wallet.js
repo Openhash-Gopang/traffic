@@ -735,6 +735,81 @@
     }
 
     /**
+     * 2026-07-18 신설 — GDC P2P 이체 (혼디 코드 스캔 → 프로필 → 이체)
+     * 새 tx 빌더를 만들지 않고 위의 sign()을 그대로 재사용한다 — outputs에
+     * 'gopang-platform' 항목을 안 넣으면 sign() 내부에서 platformFee=0으로
+     * 계산돼(sellerOut/platformOut 분리 로직) 결과적으로 수수료 없는 이체가
+     * 된다. buildTxWithPrevHash가 항상 2번째 output을 만드는 구조라 금액
+     * 0짜리 'gopang-platform' output이 하나 더 붙긴 하지만(원장이 약간
+     * 지저분해지는 정도), 검증된 sign() 경로를 그대로 타는 게 새 tx 빌더를
+     * 만드는 것보다 안전하다 — 설계문서 §3의 "다음에 개선" 항목으로 남김.
+     *
+     * @param {Object} opts
+     *   opts.toGuid  — 수신자 GUID (스캔된 프로필에서 확보)
+     *   opts.amount  — 이체 금액(₮)
+     *   opts.memo    — purpose='purchase'면 필수(품목명), 'transfer'면 선택
+     *   opts.purpose — 'transfer'(단순송금, 기본값) | 'purchase'(재화·용역 대금)
+     *                  — 2026-07-18 GDC 상거래 완성 계획서 Phase 1. 서버가
+     *                  최종 강제하지만(worker.js handleGdcTransfer), 클라도
+     *                  먼저 걸러서 불필요한 왕복을 줄인다.
+     * @returns {Object} L1 응답 (block_hash, height, seller_claim 등)
+     */
+    async sendGdc({ toGuid, amount, memo = '', purpose = 'transfer' }) {
+      if (!this.guid) throw new Error('[Wallet] guid(IPv6)가 설정되지 않았습니다.');
+      if (!toGuid) throw new Error('[Wallet] 수신자 GUID가 없습니다.');
+      if (toGuid === this.guid) throw new Error('[Wallet] 본인에게는 이체할 수 없습니다.');
+      if (!(amount > 0)) throw new Error('[Wallet] 이체 금액이 올바르지 않습니다.');
+      if (amount < 1) throw new Error('[Wallet] 최소 이체액은 ₮1입니다.');
+      if (purpose !== 'transfer' && purpose !== 'purchase') {
+        throw new Error("[Wallet] purpose는 'transfer' 또는 'purchase'여야 합니다.");
+      }
+      if (purpose === 'purchase' && !memo.trim()) {
+        throw new Error('[Wallet] 재화·용역 대금 결제는 품목명(memo)을 입력해야 합니다.');
+      }
+
+      // 1) 로컬 잔액 사전 확인(UX용 — 최종 검증은 L1이 재생 계산으로 함)
+      const db = await openDB();
+      const fsRec = await idbGet(db, IDB_FS_KEY);
+      const localBalance = parseFloat(fsRec?.state?.['bs-cash'] ?? '0') || 0;
+      if (localBalance < amount) {
+        throw new Error(`[Wallet] 잔액이 부족합니다(로컬 확인, 잔액 ₮${localBalance}).`);
+      }
+
+      // 2) tx 빌드 + 서명 (검증된 sign() 그대로 재사용, output 1개만 지정)
+      const signed = await this.sign({
+        outputs: [{ recipient_guid: toGuid, amount }],
+        total: amount,
+        seller_guid: toGuid,
+        items: [],
+      });
+
+      // 3) 서버 호출 — /biz/order가 아니라 전용 엔드포인트로
+      const res = await fetch(`${CFG.endpoint}/wallet/gdc-transfer`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tx: signed.tx, tx_hash: signed.tx_hash,
+          sender_sig: signed.buyer_sig, sender_public_key: signed.buyer_public_key,
+          from_guid: this.guid, to_guid: toGuid, amount, memo, purpose,
+          prev_settle_hash: signed.prev_settle_hash, balance_claimed: localBalance,
+        }),
+      });
+      const result = await res.json().catch(() => ({ ok: false, error: 'PARSE_FAILED' }));
+      if (!result.ok) {
+        throw new Error(`[Wallet] 이체 실패: ${result.error}${result.detail ? ' — ' + result.detail : ''}`);
+      }
+
+      // 4) redeemClaim 재사용 — 로컬 재무상태 갱신(송신자 측 차감)
+      if (result.buyer_claim) {
+        await this.redeemClaim({
+          block_hash: result.block_hash, block_id: result.block_id,
+          claims: [result.buyer_claim], tx_hash: result.tx_hash || signed.tx_hash,
+        });
+      }
+
+      return result;
+    }
+
+    /**
      * L1 청구권 수신 → 재무 상태 자기갱신 + Hash Chain 기록
      * gopang-app.js GWP_DONE 핸들러에서 호출 (STEP 24)
      *
