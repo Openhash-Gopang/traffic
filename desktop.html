@@ -1182,13 +1182,20 @@ async function callAI(messages) {
     const d = await r.json();
     return d.content || '잠시 후 다시 시도해 주세요.';
   } catch(e) {
-    console.warn('[K-Traffic] DeepSeek 폴백 → Claude:', e.message);
-    const r2 = await fetch('https://api.anthropic.com/v1/messages', {
+    console.warn('[K-Traffic] 1차 프록시 실패, 재시도:', e.message);
+    // 2026-07-18 수정: 폴백이 api.anthropic.com을 키 없이 직접 호출해서
+    // 1차 경로 장애 시 폴백도 함께 실패하는 이중 장애였다(CORS로 응답
+    // 자체에 도달 못함). gopang worker.js의 공용 프록시 경로
+    // /chat/completions(callDeepSeek)로 교체 — 최소한 폴백이 실제로
+    // 재시도를 수행하게 한다.
+    const r2 = await fetch('https://hondi-proxy.tensor-city.workers.dev/chat/completions', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, system:SYS, messages:messages.slice(-10) }),
+      body: JSON.stringify({ model:'deepseek-v4-pro', max_tokens:1000, temperature:0.7,
+        messages:[{role:'system',content:SYS}, ...messages.slice(-10)] }),
     });
+    if (!r2.ok) throw new Error(`fallback ${r2.status}`);
     const d2 = await r2.json();
-    return d2.content?.find(c => c.type === 'text')?.text || '오류가 발생했습니다.';
+    return d2.choices?.[0]?.message?.content || '오류가 발생했습니다.';
   }
 }
 
