@@ -284,46 +284,24 @@ const _sessionStartedAt = new Date().toISOString();
 // ── 대화 종료 시 이중 보고: (a) 자기 PDV에 원문 시간순 저장, (b) 나만의
 // AI 비서에게 6하원칙 보고(GWP_DONE). GWP 경유(gwp=1)일 때만 수행 —
 // 직접 접속 시엔 opener가 없으므로 보고 대상 자체가 없다.
+// 2026-07-26: 로컬 41줄 구현을 공유모듈(gwp-report-client.js)로 이관.
+// 함수 시그니쳐(resultText, summaryLine)는 그대로 유지해 호출부는
+// 손대지 않는다. gopang 저장소 GWP_DONE 컴플라이언스 전수 조사 결과
+// "레거시 통과"였던 9개 서비스 중 하나(참고 구현: klaw webapp.html).
 async function _reportSessionEnd(resultText, summaryLine) {
-  if (!GWP_MODE) return;
-  const now = new Date().toISOString();
-  const guid = _govGuid();
-  const transcript = conversationState.messages
-    .filter(m => m.role === 'user' || m.role === 'assistant')
-    .map(m => `[${m.role === 'user' ? '사용자' : 'AI'}] ${m.content}`)
-    .concat([`[AI] ${resultText}`])
-    .join('\n\n');
-  const whenObj  = { period_start: _sessionStartedAt, period_end: now };
-  const whatText = summaryLine || `${AGENCY_ID} 상담 완료`;
-
-  // (a) 서브시스템 자기 PDV — 대화 원문 시간순 저장
-  try {
-    await fetch(PROXY + '/pdv/report', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ report: {
-        svc: AGENCY_ID, type: 'conversation_transcript', session_id: _sessionId,
-        who: { ipv6: guid, role: 'user' },
-        when: whenObj,
-        where: { svc_url: location.href },
-        what: { summary: transcript },
-        how:  { method: 'gov_relay_conversation' },
-        why:  { goal: whatText },
-      }})
-    });
-  } catch(e) { console.warn('[PDV] 자기 기록 실패(무시):', e.message); }
-
-  // (b) 나만의 AI 비서에게 6하원칙 보고 — engine.js가 사용자 PDV에 기록
-  if (window.opener) {
-    try {
-      window.opener.postMessage({
-        type: 'GWP_DONE',
-        summary: whatText,
-        session_id: _sessionId,
-        reporter_svc: AGENCY_ID,
-        pdvData: { who: guid, when: whenObj, where: location.href, what: whatText, how: 'gwp', why: whatText },
-      }, GWP_ORIGIN || '*');
-    } catch(e) { console.warn('[GWP_DONE] 보고 실패(무시):', e.message); }
-  }
+  if (!GWP_MODE) return; // 직접 접속(비-GWP)이면 모듈 fetch 자체를 생략 — 기존 동작 그대로
+  const { reportGwpSessionEnd } = await import('https://hondi.net/src/gopang/gwp/gwp-report-client.js');
+  return reportGwpSessionEnd({
+    agencyId: AGENCY_ID,
+    guid: _govGuid(),
+    messages: conversationState.messages,
+    resultText,
+    summaryLine,
+    gwpMode: GWP_MODE,
+    gwpOrigin: GWP_ORIGIN,
+    sessionId: _sessionId,
+    sessionStartedAt: _sessionStartedAt,
+  }).catch(() => {});
 }
 
 // ══════════════════════════════════════════════════════════════
