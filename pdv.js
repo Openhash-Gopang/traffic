@@ -294,6 +294,37 @@ const PDV = {
     });
   },
 
+  /**
+   * 급가속·급제동 이벤트 기록 (UBI 보험 할인용 — 사용자 별도 동의 시에만 호출됨)
+   * 원시 센서값(g)은 절대 포함하지 않는다 — severity 등급만 기록한다.
+   * K_TRAFFIC_HARD_EVENT_COLLECTION_v1_0.md §3 참고.
+   * @param {object} opts — { eventType: 'brake'|'accel', severity: 'low'|'mid'|'high',
+   *                           geohashCell, dataQuality: 'devicemotion'|'gps_estimated' }
+   */
+  async writeHardEvent({ eventType = '', severity = '', geohashCell = '', dataQuality = 'devicemotion' } = {}) {
+    const ipv6 = _getUserIpv6();
+    const now  = new Date().toISOString();
+    const id   = `RPT-traffic-hardevent-${Date.now()}`;
+
+    return _sendToPDV({
+      svc:          SVC_ID,
+      type:         'traffic_hard_driving_event',
+      id,
+      content_hash: await _hashReport({ id, eventType, severity, geohashCell, now }),
+      who:  { ipv6, role: 'driver', recipients: ['gopang-pdv'] },
+      when: { generated_at: now, period_start: now, period_end: now },
+      where: { geohash_cell: geohashCell },   // 정밀 좌표 아님 — 약 4.9km 격자(precision 5)
+      what: {
+        summary:      `급${eventType === 'brake' ? '제동' : '가속'} 이벤트 (${severity})`,
+        event_type:   eventType,
+        severity,
+        data_quality: dataQuality,
+      },
+      how:  { method: dataQuality === 'devicemotion' ? '기기 가속도 센서(기기 내 탐지, 원시값 미전송)' : 'GPS 속도 델타 추정' },
+      why:  { goal: 'UBI 보험 할인 산정용 운전습관 이벤트 기록(사용자 동의 기반)', triggered: 'ins_ubi_consent' },
+    });
+  },
+
   flushPending: _flushPending,
 };
 
