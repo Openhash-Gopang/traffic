@@ -116,6 +116,41 @@ function estimateFromGpsDelta(prevFix, currFix) {
 
 이 폴백을 쓰는 사용자는 캡슐 API 응답에서 `data_quality: "gps_estimated"` 플래그가 같이 나가도록 해, 보험사(코드) 쪽에서 신뢰도를 낮게 가중할 수 있게 한다 — 정확도가 다른 두 소스를 같은 값처럼 섞지 않는다.
 
+### 2.3.1 v1.1 정밀도 보완 (2026-07-26, `ktraffic-hard-event.js` 실구현 반영)
+
+최초 구현(v1.0)은 이 폴백을 desktop.html의 매칭용 `watchPosition`
+(`enableHighAccuracy:false`, `maximumAge:20000`, 25초 스로틀 전송)에 얹어
+호출했다. 매칭에는 적절한 설정이지만 g-force 추정에는 두 가지 실질적
+결함이 있었다:
+
+1. `maximumAge:20000` 때문에 최대 20초 된 캐시 좌표가 그대로 반환될 수
+   있는데, 델타 계산에는 그 좌표의 실제 취득 시각이 아니라 호출 시점의
+   `Date.now()`를 썼다 — 캐시된 픽스가 섞이면 실제 20초짜리 완만한
+   변화가 훨씬 짧은 시간에 벌어진 것처럼 계산되어 g값이 크게 부풀려질
+   수 있었다.
+2. 위치 정확도(`coords.accuracy`)를 전혀 걸러내지 않아, 저정밀 픽스의
+   잡음 섞인 speed 값도 그대로 계산에 들어갔다.
+
+v1.1은 다음과 같이 고쳤다:
+
+- GPS 폴백이 활성화된 경우(`enable()`이 `gps_estimated`를 반환한 경우),
+  매칭용 워치와 완전히 분리된 **전용 고정밀·비캐시 워치**
+  (`enableHighAccuracy:true`, `maximumAge:0`)를 이 모듈이 직접 띄운다.
+  매칭용 좌표 전송(25초 스로틀)에는 영향을 주지 않는다.
+- 각 픽스의 델타 계산에 호출 시각이 아니라 **실제 취득 시각**
+  (`pos.timestamp`)을 쓴다.
+- 정확도가 `MAX_FIX_ACCURACY_M`(25m) 기준보다 나쁜 픽스는 계산에서
+  제외한다(`isFixUsable()`).
+- 위 두 항목은 `estimateGForceFromDelta()` / `isFixUsable()` 순수 함수로
+  분리해 `tests/test_gps_fallback_precision.js`로 직접 검증한다.
+
+**여전히 남는 한계**: GPS 갱신 주기(대체로 1Hz 안팎)는 devicemotion(수십
+Hz)보다 훨씬 느려, §2.2의 400ms 지속시간·최소 샘플 3개 기준을 GPS
+폴백에서는 그대로 만족시키기 어렵다. v1.1은 계산 자체의 정확성(정확도
+게이팅, 올바른 시각 사용)을 고친 것이지, "GPS 폴백은 완전 무데이터보다
+나은 최후 수단"이라는 §2.3의 평가 자체를 뒤집는 것은 아니다. §5의 제주
+필드테스트 실측이 필요하다는 결론도 유효하다.
+
 ---
 
 ## 3. 전송되는 것 — 이벤트 단위, PDV 6하원칙 기록
@@ -169,7 +204,9 @@ Cron Trigger(매월 1일 00:00 KST) → aggregateHardEvents()
 
 ## 6. 다음 단계
 
-- [ ] `ktraffic-hard-event.js` 실제 파일 작성 및 `desktop.html`/`webapp.html`에 옵트인 UI(별도 동의 스위치) 추가
+- [x] `ktraffic-hard-event.js` 실제 파일 작성 및 `desktop.html`에 옵트인 UI(별도 동의 스위치) 추가
+- [x] GPS 폴백 정밀도 보완 — 전용 고정밀·비캐시 워치, 정확도 게이팅, 실제 취득 시각 사용(§2.3.1, v1.1)
+- [ ] webapp.html(모바일)에도 동일한 옵트인 UI 추가 — 현재 desktop.html에만 있음
 - [ ] 기기 방향 보정(자이로 결합) 로직 구체화
 - [ ] `aggregateHardEvents()` Cron Worker 실제 구현
 - [ ] 제주 필드테스트에서 배터리·오탐률 실측 후 임계치 재조정

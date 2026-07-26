@@ -1486,14 +1486,12 @@ function _startPositionWatch() {
   if (!navigator.geolocation) { toast('⚠️ 이 브라우저는 위치 공유를 지원하지 않습니다.'); return; }
   if (_positionWatchId != null) return;
   _positionWatchId = navigator.geolocation.watchPosition((pos) => {
-    // GPS 속도 델타 폴백(가속도계 미지원/거부 시)은 매 위치 갱신마다 별도로
-    // 받아야 하므로 25초 스로틀과 무관하게 호출한다 — devicemotion을 쓰는
-    // 중이면 KTrafficHardEvent 내부에서 조용히 무시된다.
-    if (window.KTrafficHardEvent && pos.coords.speed != null) {
-      window.KTrafficHardEvent.onGpsFix(
-        pos.coords.latitude, pos.coords.longitude, pos.coords.speed * 3.6, Date.now()
-      );
-    }
+    // v1.1(2026-07-26) — 이전엔 이 저정밀·캐시 허용 워치(enableHighAccuracy:false,
+    // maximumAge:20000)의 픽스를 그대로 GPS 폴백 g-force 계산에도 먹였는데,
+    // 캐시된 좌표의 실제 취득 시각을 반영하지 못해(Date.now() 사용) 델타가
+    // 왜곡되는 문제가 있었다. GPS 폴백이 켜져 있으면 ktraffic-hard-event.js가
+    // enable() 시점에 자체 고정밀·비캐시 워치를 따로 띄우므로, 여기서는 더 이상
+    // onGpsFix를 호출하지 않는다(설계 문서 §2.3, ktraffic-hard-event.js v1.1 참고).
     const now = Date.now();
     if (now - _lastPositionSentAt < 25000) return; // 25초 스로틀
     _lastPositionSentAt = now;
