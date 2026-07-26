@@ -340,6 +340,7 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
 @media(max-width:900px){.features-grid{grid-template-columns:1fr 1fr}.stat-grid{grid-template-columns:1fr}}
 </style>
 <script src="./pdv.js"></script>
+<script src="./ktraffic-hard-event.js"></script>
 <script type="module" src="https://hondi.net/auth/subsystem-auth.js"></script>
 </head>
 <body>
@@ -989,6 +990,15 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
         </div>
       </div>
       <div id="driver-status-line" style="display:none;font-size:12px;color:var(--txt3);margin-bottom:10px"></div>
+      <div class="card" id="ubi-consent-card" style="margin-bottom:14px;display:none;background:var(--bg2)">
+        <div class="card-bd" style="display:flex;align-items:flex-start;gap:10px;font-size:12px;color:var(--txt2)">
+          <input type="checkbox" id="ubi-hard-event-toggle" onchange="onUbiConsentToggle(this)" style="margin-top:2px;flex-shrink:0">
+          <label for="ubi-hard-event-toggle" style="cursor:pointer">
+            <strong>UBI 보험 할인용 급가속·급제동 감지 (선택)</strong><br>
+            휴대폰의 가속도 센서로 급가속·급제동을 기기 안에서 자동 감지합니다. 원시 센서 값은 기기 밖으로 전송되지 않고, "이벤트 발생 여부·등급"만 서버로 전송됩니다. 매칭 기능 이용에는 영향 없으며 언제든 끌 수 있습니다.
+          </label>
+        </div>
+      </div>
       <div id="driver-request-card">
         <div class="card">
           <div class="card-bd" style="color:var(--txt3);font-size:13px">대기 중 — 새 탑승 요청이 오면 여기 실시간으로 표시됩니다.</div>
@@ -1454,14 +1464,36 @@ async function registerAsDriver() {
     toast('✅ 기사 등록 완료 — 위치 공유를 시작합니다.');
     document.getElementById('driver-register-card').style.display='none';
     document.getElementById('driver-status-line').style.display='block';
+    document.getElementById('ubi-consent-card').style.display='block';
+    document.getElementById('ubi-hard-event-toggle').checked = window.KTrafficHardEvent?.isEnabled() || false;
     _startPositionWatch();
   } catch(e) { toast('⚠️ 서버에 연결할 수 없습니다.'); }
+}
+
+async function onUbiConsentToggle(checkbox) {
+  if (checkbox.checked) {
+    const source = await window.KTrafficHardEvent.enable();
+    toast(source === 'devicemotion'
+      ? '✅ 급가속·급제동 감지를 시작합니다 (기기 센서 기반).'
+      : '✅ 급가속·급제동 감지를 시작합니다 (GPS 추정 — 정확도 낮음).');
+  } else {
+    window.KTrafficHardEvent.disable();
+    toast('급가속·급제동 감지를 껐습니다.');
+  }
 }
 
 function _startPositionWatch() {
   if (!navigator.geolocation) { toast('⚠️ 이 브라우저는 위치 공유를 지원하지 않습니다.'); return; }
   if (_positionWatchId != null) return;
   _positionWatchId = navigator.geolocation.watchPosition((pos) => {
+    // GPS 속도 델타 폴백(가속도계 미지원/거부 시)은 매 위치 갱신마다 별도로
+    // 받아야 하므로 25초 스로틀과 무관하게 호출한다 — devicemotion을 쓰는
+    // 중이면 KTrafficHardEvent 내부에서 조용히 무시된다.
+    if (window.KTrafficHardEvent && pos.coords.speed != null) {
+      window.KTrafficHardEvent.onGpsFix(
+        pos.coords.latitude, pos.coords.longitude, pos.coords.speed * 3.6, Date.now()
+      );
+    }
     const now = Date.now();
     if (now - _lastPositionSentAt < 25000) return; // 25초 스로틀
     _lastPositionSentAt = now;
