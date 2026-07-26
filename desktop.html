@@ -872,11 +872,9 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
         <div style="font-size:12px;color:var(--txt3)">출발지·목적지 입력 후 표시됩니다</div>
       </div>
       <div id="vehicle-results" style="display:none">
-        <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:12px">🔍 매칭 가능 차량 (동선 겹침 순)</div>
-        <div class="vehicle-grid">
-          <div class="vehicle-card"><div class="v-type vt-car">🚗 자가용 공유</div><div class="v-name">김○○ (고팡 등록)</div><div class="v-info">제주 12가 3456 · 신뢰 점수 4.9</div><div class="v-row"><span class="v-avail">● 이동 중 (겹침 92%)</span><span>예상 요금 8 GDC</span></div><div class="v-actions"><button class="v-btn" onclick="requestRide('김○○')">탑승 요청</button><button class="v-btn-g">상세</button></div></div>
-          <div class="vehicle-card"><div class="v-type vt-taxi">🚕 택시</div><div class="v-name">이○○ 기사 (고팡 등록)</div><div class="v-info">제주 34나 5678 · 신뢰 점수 4.7</div><div class="v-row"><span class="v-avail">● 대기 중 (겹침 78%)</span><span>예상 요금 12 GDC</span></div><div class="v-actions"><button class="v-btn" onclick="requestRide('이○○')">탑승 요청</button><button class="v-btn-g">상세</button></div></div>
-          <div class="vehicle-card"><div class="v-type vt-bus">🚌 버스</div><div class="v-name">제주 702번 버스</div><div class="v-info">고팡 연계 노선 · 신뢰 점수 5.0</div><div class="v-row"><span class="v-avail">● 10분 후 출발 (겹침 65%)</span><span>예상 요금 2 GDC</span></div><div class="v-actions"><button class="v-btn" onclick="requestRide('702번 버스')">탑승 예약</button><button class="v-btn-g">노선도</button></div></div>
+        <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:12px">🔍 응답한 기사 (실시간)</div>
+        <div class="vehicle-grid" id="vehicle-grid-body">
+          <div style="color:var(--txt3);font-size:13px;padding:8px 0">아직 응답한 기사가 없습니다 — 매칭되면 실시간으로 표시됩니다.</div>
         </div>
       </div>
     </div>
@@ -892,9 +890,9 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
     <div class="panel-body">
       <div class="map-ph"><svg viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg><div style="font-size:13px;font-weight:600;color:#374151">실시간 매칭 지도</div><div style="font-size:12px;color:var(--txt3)">현재 이동 중인 차량 위치 표시</div></div>
       <div class="card">
-        <div class="card-hd"><span class="card-hd-t">📍 현재 이동 현황</span><span class="badge b-ok">매칭 완료</span></div>
-        <div class="card-bd">
-          <div class="alert-row"><div class="alert-dot" style="background:var(--blue)"></div><div class="alert-info"><div class="alert-t">김○○ 차량 · 제주 12가 3456</div><div class="alert-d">한림읍 출발 → 제주도청 · 예상 도착 09:28 · 8 GDC</div></div><span class="badge b-blue">이동 중</span></div>
+        <div class="card-hd"><span class="card-hd-t">📍 현재 이동 현황</span><span class="badge" id="matching-status-badge" style="background:#f3f4f6;color:#6b7280">대기 중</span></div>
+        <div class="card-bd" id="matching-status-body">
+          <div style="color:var(--txt3);font-size:13px">진행 중인 매칭이 없습니다. '이동 요청' 패널에서 차량을 탐색해 주세요.</div>
         </div>
       </div>
     </div>
@@ -911,22 +909,22 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
       <div class="card">
         <div class="card-hd"><span class="card-hd-t">📦 배송 정보 입력</span></div>
         <div class="card-bd">
-          <div class="f-group"><label class="f-label">수거지</label><input class="f-input" placeholder="예: 서귀포시 중앙로 55"></div>
-          <div class="f-group"><label class="f-label">배송지</label><input class="f-input" placeholder="예: 제주시 노형동 123"></div>
+          <div class="f-group"><label class="f-label">수거지</label><input class="f-input" placeholder="예: 서귀포시 중앙로 55" id="cargo-from"></div>
+          <div class="f-group"><label class="f-label">배송지</label><input class="f-input" placeholder="예: 제주시 노형동 123" id="cargo-to"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div class="f-group"><label class="f-label">화물 규격</label><select class="f-select"><option>소형 (박스)</option><option>중형 (가전)</option><option>대형 (가구)</option><option>오토바이 배달</option></select></div>
-            <div class="f-group"><label class="f-label">무게 (kg)</label><input type="number" class="f-input" placeholder="예: 5"></div>
+            <div class="f-group"><label class="f-label">화물 규격</label><select class="f-select" id="cargo-spec"><option>소형 (박스)</option><option>중형 (가전)</option><option>대형 (가구)</option><option>오토바이 배달</option></select></div>
+            <div class="f-group"><label class="f-label">무게 (kg)</label><input type="number" class="f-input" placeholder="예: 5" id="cargo-weight"></div>
           </div>
-          <button class="f-btn-full" onclick="toast('📦 배송 차량을 탐색합니다…')">배송 차량 탐색</button>
+          <button class="f-btn-full" onclick="searchCargoVehicles()">배송 차량 탐색</button>
         </div>
       </div>
-      <table class="data-table" style="margin-top:14px">
-        <thead><tr><th>배송 번호</th><th>수거지</th><th>배송지</th><th>상태</th><th>요금</th></tr></thead>
-        <tbody>
-          <tr><td>#TRF-2026-001</td><td>서귀포 중앙로</td><td>노형동</td><td><span class="badge b-ok">배송 완료</span></td><td>5 GDC</td></tr>
-          <tr><td>#TRF-2026-002</td><td>한림읍 귀덕리</td><td>제주공항</td><td><span class="badge b-blue">이동 중</span></td><td>8 GDC</td></tr>
-        </tbody>
-      </table>
+      <div id="cargo-results" style="display:none;margin-top:14px">
+        <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:12px">🔍 응답한 기사 (실시간)</div>
+        <div class="vehicle-grid" id="cargo-grid-body"></div>
+      </div>
+      <div style="margin-top:14px;padding:12px 14px;background:#f9fafb;border-radius:9px;font-size:12px;color:var(--txt3)">
+        배송 이력은 준비 중입니다.
+      </div>
     </div>
   </div>
 
@@ -939,11 +937,9 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
     </div>
     <div class="panel-body">
       <table class="data-table">
-        <thead><tr><th>일시</th><th>출발지</th><th>목적지</th><th>운전자</th><th>요금</th><th>평가</th><th>상태</th></tr></thead>
-        <tbody>
-          <tr><td>2026.05.31 09:28</td><td>한림읍</td><td>제주도청</td><td>김○○</td><td>8 GDC</td><td>⭐ 5.0</td><td><span class="badge b-done">완료</span></td></tr>
-          <tr><td>2026.05.29 14:10</td><td>제주공항</td><td>서귀포</td><td>이○○</td><td>22 GDC</td><td>⭐ 4.8</td><td><span class="badge b-done">완료</span></td></tr>
-          <tr><td>2026.05.27 08:45</td><td>노형동</td><td>성산일출봉</td><td>702번 버스</td><td>2 GDC</td><td>⭐ 5.0</td><td><span class="badge b-done">완료</span></td></tr>
+        <thead><tr><th>일시</th><th>출발지</th><th>목적지</th><th>결제 tx</th><th>상태</th></tr></thead>
+        <tbody id="history-tbody">
+          <tr><td colspan="5" style="color:var(--txt3)">불러오는 중…</td></tr>
         </tbody>
       </table>
     </div>
@@ -959,20 +955,18 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
     <div class="panel-body">
       <div class="gdc-card">
         <div class="gdc-label">현재 잔액</div>
-        <div class="gdc-balance">247.5 <span style="font-size:18px;font-weight:500;color:#93c5fd">GDC</span></div>
-        <div style="font-size:12px;color:#93c5fd;margin-top:4px">≈ ₩247,500 상당</div>
+        <div class="gdc-balance" id="wallet-balance-gdc">불러오는 중… <span style="font-size:18px;font-weight:500;color:#93c5fd">GDC</span></div>
+        <div style="font-size:12px;color:#93c5fd;margin-top:4px" id="wallet-balance-krw"></div>
         <div class="gdc-actions">
-          <button class="gdc-btn" onclick="toast('💰 GDC 충전 페이지로 이동합니다.')">충전</button>
-          <button class="gdc-btn" onclick="toast('💸 GDC 출금 페이지로 이동합니다.')">출금</button>
-          <button class="gdc-btn" onclick="toast('📋 거래 내역을 불러옵니다.')">거래 내역</button>
+          <button class="gdc-btn" onclick="toast('💰 GDC 충전은 준비 중입니다.')">충전</button>
+          <button class="gdc-btn" onclick="toast('💸 GDC 출금은 준비 중입니다.')">출금</button>
+          <button class="gdc-btn" onclick="loadWalletHistory()">거래 내역 새로고침</button>
         </div>
       </div>
       <table class="data-table">
-        <thead><tr><th>일시</th><th>내용</th><th>금액</th><th>잔액</th></tr></thead>
-        <tbody>
-          <tr><td>2026.05.31 09:28</td><td>탑승 요금 — 한림→도청 (김○○)</td><td style="color:var(--danger)">-8 GDC</td><td>247.5 GDC</td></tr>
-          <tr><td>2026.05.30 12:00</td><td>GDC 충전</td><td style="color:var(--green)">+100 GDC</td><td>255.5 GDC</td></tr>
-          <tr><td>2026.05.29 14:10</td><td>탑승 요금 — 공항→서귀포 (이○○)</td><td style="color:var(--danger)">-22 GDC</td><td>155.5 GDC</td></tr>
+        <thead><tr><th>일시</th><th>내용</th><th>구분</th><th>금액</th></tr></thead>
+        <tbody id="wallet-tx-tbody">
+          <tr><td colspan="4" style="color:var(--txt3)">불러오는 중…</td></tr>
         </tbody>
       </table>
     </div>
@@ -986,25 +980,24 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
       <div class="ph-sub">이동 동선에 맞는 탑승 요청이 자동으로 수신됩니다. 수락하면 신원이 상호 확인됩니다.</div>
     </div>
     <div class="panel-body">
-      <div class="card" style="border:1.5px solid var(--blue);margin-bottom:14px">
-        <div class="card-hd"><span class="card-hd-t">🔔 새 탑승 요청</span><span class="badge b-blue">3분 내 응답 필요</span></div>
+      <div class="card" id="driver-register-card" style="margin-bottom:14px;display:none">
+        <div class="card-hd"><span class="card-hd-t">🚘 기사 등록</span></div>
         <div class="card-bd">
-          <div style="font-size:13px;line-height:1.8;margin-bottom:14px">
-            <strong>출발지:</strong> 제주시 한림읍 한림로 123<br>
-            <strong>목적지:</strong> 제주시 문연로 6 (도청)<br>
-            <strong>탑승 인원:</strong> 1명 · <strong>동선 겹침:</strong> 92%<br>
-            <strong>요금:</strong> 8 GDC → 내 지갑으로 자동 이체
-          </div>
-          <div style="display:flex;gap:8px">
-            <button class="v-btn" style="flex:2" onclick="toast('✅ 수락 완료! 이용자 신원을 확인합니다.')">수락 (8 GDC 획득)</button>
-            <button class="v-btn-g" style="flex:1" onclick="toast('다음 요청을 탐색합니다.')">거절</button>
-          </div>
+          <div class="f-group"><label class="f-label">차량 종류</label><select class="f-select" id="drv-vehicle-type"><option value="passenger">승객(카풀)</option><option value="cargo">화물</option></select></div>
+          <div class="f-group"><label class="f-label">탑승/적재 가능 인원(kg)</label><input type="number" class="f-input" id="drv-capacity" value="4" min="1"></div>
+          <button class="f-btn-full" onclick="registerAsDriver()">기사로 등록하고 수요 수신 시작</button>
         </div>
       </div>
-      <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">124</div><div class="stat-lbl">이번 달 운행 수</div><div class="stat-sub">전월 대비 +12%</div></div>
-        <div class="stat-card"><div class="stat-val">892</div><div class="stat-lbl">이번 달 획득 GDC</div><div class="stat-sub">≈ ₩892,000</div></div>
-        <div class="stat-card"><div class="stat-val">4.9</div><div class="stat-lbl">PDV 신뢰 점수</div><div class="stat-sub">상위 5%</div></div>
+      <div id="driver-status-line" style="display:none;font-size:12px;color:var(--txt3);margin-bottom:10px"></div>
+      <div id="driver-request-card">
+        <div class="card">
+          <div class="card-bd" style="color:var(--txt3);font-size:13px">대기 중 — 새 탑승 요청이 오면 여기 실시간으로 표시됩니다.</div>
+        </div>
+      </div>
+      <div class="stat-grid" style="margin-top:14px">
+        <div class="stat-card"><div class="stat-val" id="drv-stat-rides">–</div><div class="stat-lbl">완료한 운행 수</div><div class="stat-sub">최근 20건 기준</div></div>
+        <div class="stat-card"><div class="stat-val" id="drv-stat-gdc">–</div><div class="stat-lbl">현재 GDC 잔액</div><div class="stat-sub">지갑 기준</div></div>
+        <div class="stat-card"><div class="stat-val">준비 중</div><div class="stat-lbl">PDV 신뢰 점수</div><div class="stat-sub">평가 집계 기능 개발 중</div></div>
       </div>
     </div>
   </div>
@@ -1017,20 +1010,14 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
     </div>
     <div class="panel-body">
       <div class="gdc-card" style="margin-bottom:16px">
-        <div class="gdc-label">총 누적 획득 GDC</div>
-        <div class="gdc-balance">4,218 <span style="font-size:18px;font-weight:500;color:#93c5fd">GDC</span></div>
-        <div style="font-size:12px;color:#93c5fd;margin-top:4px">≈ ₩4,218,000 상당</div>
-        <div class="gdc-actions">
-          <button class="gdc-btn" onclick="toast('💸 GDC 출금 페이지로 이동합니다.')">출금</button>
-          <button class="gdc-btn" onclick="toast('📋 정산 내역을 불러옵니다.')">정산 내역</button>
-        </div>
+        <div class="gdc-label">현재 GDC 지갑 잔액</div>
+        <div class="gdc-balance" id="drv-wallet-balance-gdc">불러오는 중… <span style="font-size:18px;font-weight:500;color:#93c5fd">GDC</span></div>
+        <div style="font-size:12px;color:#93c5fd;margin-top:4px" id="drv-wallet-balance-krw"></div>
       </div>
       <table class="data-table">
-        <thead><tr><th>일시</th><th>구간</th><th>이용자</th><th>획득 GDC</th><th>평가</th></tr></thead>
-        <tbody>
-          <tr><td>2026.05.31 09:28</td><td>한림→도청</td><td>박○○</td><td style="color:var(--green)">+8 GDC</td><td>⭐ 5.0</td></tr>
-          <tr><td>2026.05.31 07:15</td><td>노형동→공항</td><td>최○○</td><td style="color:var(--green)">+15 GDC</td><td>⭐ 5.0</td></tr>
-          <tr><td>2026.05.30 18:30</td><td>서귀포→중문</td><td>강○○</td><td style="color:var(--green)">+10 GDC</td><td>⭐ 4.8</td></tr>
+        <thead><tr><th>일시</th><th>구간</th><th>거리</th><th>결제 tx</th><th>상태</th></tr></thead>
+        <tbody id="drv-history-tbody">
+          <tr><td colspan="5" style="color:var(--txt3)">불러오는 중…</td></tr>
         </tbody>
       </table>
     </div>
@@ -1044,22 +1031,9 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
       <div class="ph-sub">플랫폼 전체 운행·결제·신뢰 현황을 관리합니다.</div>
     </div>
     <div class="panel-body">
-      <div class="stat-grid" style="margin-bottom:16px">
-        <div class="stat-card"><div class="stat-val">8,421</div><div class="stat-lbl">이번 달 총 운행 건</div><div class="stat-sub">전월 대비 +15.2%</div></div>
-        <div class="stat-card"><div class="stat-val">94.7%</div><div class="stat-lbl">매칭 성공률</div><div class="stat-sub">목표 90% 초과</div></div>
-        <div class="stat-card"><div class="stat-val">0건</div><div class="stat-lbl">미해결 분쟁</div><div class="stat-sub">PDV 기록 기반 즉시 해결</div></div>
-      </div>
-      <div class="card">
-        <div class="card-hd"><span class="card-hd-t">🔐 OpenHash 무결성 검증</span><span class="badge b-ok">정상</span></div>
-        <div class="card-bd">
-          <table class="data-table">
-            <thead><tr><th>검증 시각</th><th>레코드 수</th><th>해시 일치</th><th>이상 탐지</th><th>결과</th></tr></thead>
-            <tbody>
-              <tr><td>2026.05.31 14:00</td><td>284,912</td><td>284,912</td><td>0</td><td><span class="badge b-ok">정상</span></td></tr>
-              <tr><td>2026.05.31 08:00</td><td>284,108</td><td>284,108</td><td>0</td><td><span class="badge b-ok">정상</span></td></tr>
-            </tbody>
-          </table>
-        </div>
+      <div style="padding:16px 18px;background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;font-size:13px;color:var(--txt2)">
+        플랫폼 전체 집계 통계·OpenHash 감사 로그 기능은 아직 개발 중입니다.
+        개별 운행 기록은 '이용 기록'·'운행 통계' 패널에서 확인할 수 있습니다.
       </div>
     </div>
   </div>
@@ -1074,13 +1048,13 @@ button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none
     <div class="panel-body">
       <div style="background:linear-gradient(135deg,#7f1d1d,#991b1b);border-radius:11px;padding:18px 20px;display:flex;align-items:center;gap:16px;margin-bottom:16px;color:#fff">
         <svg width="36" height="36" viewBox="0 0 24 24" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div style="flex:1"><div style="font-size:16px;font-weight:800;margin-bottom:4px">즉시 112 · 현재 위치 & PDV 탑승 기록 자동 전송</div><div style="font-size:13px;opacity:.8">탑승 기록(운전자·차량번호·경로)이 경찰에 자동 공유됩니다.</div></div>
-        <button onclick="emergencyReport()" style="background:#fff;color:#991b1b;border:none;border-radius:9px;padding:11px 20px;font-size:14px;font-weight:800;cursor:pointer">📞 112 연결</button>
+        <div style="flex:1"><div style="font-size:16px;font-weight:800;margin-bottom:4px">위급 상황에는 112(범죄) 또는 119(사고·구조)에 직접 전화하세요</div><div style="font-size:13px;opacity:.8">이 앱은 경찰·구조대에 자동으로 연결되지 않습니다. 아래 버튼은 탑승 기록을 본인 PDV에 남기는 기능일 뿐입니다.</div></div>
+        <button onclick="emergencyReport()" style="background:#fff;color:#991b1b;border:none;border-radius:9px;padding:11px 20px;font-size:14px;font-weight:800;cursor:pointer">📝 탑승 기록 남기기</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:16px">
-        <div class="card" style="margin:0"><div class="card-bd"><div style="font-size:22px;margin-bottom:8px;font-weight:800;color:var(--blue)">1</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">긴급 버튼 누르기</div><div style="font-size:12px;color:var(--txt2)">탑승 중 위험 감지 시 즉시 버튼을 누르세요.</div></div></div>
-        <div class="card" style="margin:0"><div class="card-bd"><div style="font-size:22px;margin-bottom:8px;font-weight:800;color:var(--blue)">2</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">자동 기록 전송</div><div style="font-size:12px;color:var(--txt2)">현재 위치·차량번호·운전자 신원이 112에 전송됩니다.</div></div></div>
-        <div class="card" style="margin:0"><div class="card-bd"><div style="font-size:22px;margin-bottom:8px;font-weight:800;color:var(--blue)">3</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">PDV 증거 확보</div><div style="font-size:12px;color:var(--txt2)">전 과정이 PDV에 기록되어 수사 증거로 활용됩니다.</div></div></div>
+        <div class="card" style="margin:0"><div class="card-bd"><div style="font-size:22px;margin-bottom:8px;font-weight:800;color:var(--blue)">1</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">위험을 느끼면 먼저 112/119</div><div style="font-size:12px;color:var(--txt2)">가장 빠르고 확실한 방법은 직접 전화하는 것입니다.</div></div></div>
+        <div class="card" style="margin:0"><div class="card-bd"><div style="font-size:22px;margin-bottom:8px;font-weight:800;color:var(--blue)">2</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">여유가 되면 기록 버튼도</div><div style="font-size:12px;color:var(--txt2)">현재 탑승 정보를 본인 PDV에 남겨 나중에 참고할 수 있습니다.</div></div></div>
+        <div class="card" style="margin:0"><div class="card-bd"><div style="font-size:22px;margin-bottom:8px;font-weight:800;color:var(--blue)">3</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">PDV는 본인만 열람</div><div style="font-size:12px;color:var(--txt2)">경찰이 필요로 하면 본인이 직접 제출해야 합니다. 자동 전달되지 않습니다.</div></div></div>
       </div>
       <div style="background:var(--orange-bg);border-radius:10px;padding:14px 16px;border:1px solid #fed7aa;font-size:13px">
         <div style="font-weight:700;color:#9a3412;margin-bottom:6px">📞 긴급 연락처</div>
@@ -1121,48 +1095,42 @@ function show(id, btn) {
   document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
   document.getElementById('topbar-title').textContent = TITLES[id]||'';
+  // 2026-07-26 신설 — 패널 전환 시 실제 데이터 로드(가짜 데이터 대체)
+  if (id === 'wallet') { loadWalletBalance(); loadWalletHistory(); }
+  else if (id === 'history') { loadRideHistory(); }
+  else if (id === 'driver') { initDriverPanel(); }
+  else if (id === 'driver-stats') { loadDriverStats(); }
 }
 
 /* AI 채팅 */
 const PROXY_URL = 'https://hondi-proxy.tensor-city.workers.dev';
 
-const SYS = `당신은 K-Traffic의 핵심 AI 매칭 엔진입니다.
-고팡(Gopang) 생태계의 교통·물류 플랫폼에서 동작하며,
-신규 이동·물류 수요를 분석하여 기존 운행 중이거나 운행 예정인
-고팡 사용자(차량)를 하나 이상 조합해 최적의 동선을 구성합니다.
+// 2026-07-26 정정 — 이전 버전은 이 AI에게 매 응답마다 존재하지 않는
+// 기사·매칭·요금을 즉석에서 지어내도록 지시하고 있었다("고팡 블랙박스"
+// 등 실재하지 않는 인프라를 사실처럼 서술). 실제 매칭은 이제
+// searchVehicles()가 /match/* API로 직접 수행하므로, 이 AI는 매칭을
+// "수행"하지 않고 사용법 안내·문의 응대만 한다 — 실제로 하는 일만
+// 사실대로 서술.
+const SYS = `당신은 K-Traffic 안내 도우미입니다. 실제 차량 매칭은 이 AI가
+아니라 화면의 '이동 요청'/'물류 & 배송' 패널이 실시간 백엔드로 직접
+수행합니다 — 당신은 매칭 결과를 만들어내지 않습니다.
 
-[플랫폼 아키텍처]
-Openhash 계층: L1(읍면동)→L2(시군구)→L3(광역시도)→L4(국가)→L5(글로벌)
-탐색 원칙: 동선이 L1 이내이면 L2로 전달하지 않음. L2 이내이면 L3 전달 없음.
-고팡 블랙박스: 모든 차량이 1분 단위로 위치·동선을 Openhash L1 서버에 전송.
-PDV: 모든 거래는 양측 PDV에 암호화 기록. L1 미만 차량은 추천 제외.
-GDC: 기본요금 2 GDC(5km 이내), 추가 0.3 GDC/km. 완료 즉시 자동 이체.
+[할 수 있는 일]
+- '이동 요청' 패널 사용법 안내(출발지·목적지 입력 → 차량 탐색 → 실시간
+  응답 대기)
+- 자주 묻는 질문 응대: 요금은 고정 요율이 없고 기사와 개별 협의 후 결제
+  화면에서 직접 입력해 GDC로 지불한다는 점, 매칭이 안 될 수도 있다는 점
+- 일반적인 교통 정보 안내(제주 지리, 대중교통 등)
 
-[역할]
-STEP 1. 수요 분석: 유형(이동/물류), 출발지, 목적지, 화물 종류·중량, 시간 조건, Openhash 레벨 판별
-STEP 2. 차량 탐색: 동선 겹침 + PDV L1 이상 + 적재 가능 차량 선정
-STEP 3. 릴레이 조합: 장거리는 중간 환승 거점(휴게소·터미널·물류센터)에서 복수 차량 조합
-STEP 4. 결과 제시: 수요자 요약 + 운전자별 수령·전달·인수인계 메시지 생성
-
-[응답 형식]
-① 사용자 요약: 매칭 차량, 예상 소요, GDC 요금
-② 운전자 메시지 블록 (차량별):
-  📍 수령 장소 / 📦 수령 물품 / 🏁 전달 장소 / 🔄 인수인계 / ⏰ 시간 / 💰 GDC / 🔐 PDV 기록
-
-[규칙]
-- 출발지·목적지 불명확 시 먼저 질문
-- 화물: 품목·수량·중량 확인, 위험물 거절
-- 운전자 성명은 성+○○으로 마스킹 (예: 김○○)
-- 차량 없을 시 솔직히 안내 후 운전자 모집 메시지 생성
-- 응답 끝에 수요 ID(DM-XXXX), Openhash 레벨, PDV 기록 예고 포함
-- 한국어로만 응답. 데스크톱 환경이므로 상세하게 작성 가능.
-
-[주요 환승 거점]
-경부고속도로: 죽전·안성·천안삼거리·금강·추풍령·칠곡
-영동: 여주·횡성·강릉 / 서해안: 행담도·서산·고창
-고속버스터미널: 서울강남·동서울·부산·대전·광주·대구
-물류센터: 이천·군포·부산신항·대전
-제주: 국제공항·제주항·한림항·제주도청·서귀포시청`;
+[반드시 지킬 것]
+- 특정 기사 이름·차량번호·도착 예정 시각 등 실제로 조회하지 않은 정보를
+  절대 지어내지 않는다. 모르면 "화면에서 실시간으로 확인해 주세요"라고
+  안내한다.
+- "곧 매칭됩니다", "차량을 찾았습니다" 같은 결과를 당신이 직접 알리지
+  않는다 — 그건 화면이 실시간으로 보여준다.
+- 응급 상황 문의에는 112(범죄)/119(사고) 직접 신고를 안내한다. 이 앱이
+  자동으로 신고하지 않는다는 점을 분명히 한다.
+- 한국어로 간결하게 답한다.`;
 
 async function callAI(messages) {
   // DeepSeek V3 Pro — gopang-proxy의 DEEPSEEK_API_KEY 사용
@@ -1234,43 +1202,436 @@ function addBubble(text,type){
 }
 function qs(s){show('chat',null);setTimeout(()=>{document.getElementById('chat-input').value=s;chatSend();},80);}
 
-function searchVehicles(){
+/* ══════════════════════════════════════════════════════════
+   2026-07-26 신설 — 실매칭 백엔드(/match/*) 클라이언트 연동.
+   이전 버전은 하드코딩된 가짜 차량 3개를 보여주는 목업이었다.
+   ══════════════════════════════════════════════════════════ */
+
+function _matchGuid() { return window._gopangUser?.ipv6 || null; }
+function _requireAuth() {
+  if (_matchGuid()) return true;
+  toast('⚠️ 로그인(고팡 인증)이 필요합니다.');
+  return false;
+}
+function _wsUrl(path) { return PROXY_URL.replace(/^http/, 'ws') + path; }
+
+// 서버(worker.js _geohashEncode)와 완전히 동일한 알고리즘 — 클라이언트가
+// 기사 위치의 geohash 셀을 계산해 그 셀의 실시간 알림 채널을 구독하는 데 쓴다.
+const _GEOHASH_BASE32 = '0123456789bcdefghjkmnpqrstuvwxyz';
+function geohashEncode(lat, lng, precision = 5) {
+  const latRange = [-90, 90], lngRange = [-180, 180];
+  let hash = '', bit = 0, ch = 0, evenBit = true;
+  while (hash.length < precision) {
+    if (evenBit) {
+      const mid = (lngRange[0] + lngRange[1]) / 2;
+      if (lng >= mid) { ch |= (1 << (4 - bit)); lngRange[0] = mid; } else { lngRange[1] = mid; }
+    } else {
+      const mid = (latRange[0] + latRange[1]) / 2;
+      if (lat >= mid) { ch |= (1 << (4 - bit)); latRange[0] = mid; } else { latRange[1] = mid; }
+    }
+    evenBit = !evenBit;
+    if (bit < 4) { bit++; } else { hash += _GEOHASH_BASE32[ch]; bit = 0; ch = 0; }
+  }
+  return hash;
+}
+
+async function geocodeAddress(address) {
+  const r = await fetch(`${PROXY_URL}/match/geocode?address=${encodeURIComponent(address)}`);
+  if (!r.ok) return null;
+  return r.json(); // {lat, lng}
+}
+
+/* ── 승객: 이동 요청 ── */
+let _activeDemandWs = null;
+let _activeDemandId = null;
+
+async function searchVehicles(){
+  if (!_requireAuth()) return;
   const from=document.getElementById('req-from').value.trim();
   const to=document.getElementById('req-to').value.trim();
   if(!from||!to){toast('출발지와 목적지를 입력해 주세요.');return;}
-  toast('🔍 동선이 겹치는 차량을 탐색 중…');
-  // PDV: 이동 요청 기록
+  toast('📍 주소를 좌표로 변환하는 중…');
+  const [fromGeo, toGeo] = await Promise.all([geocodeAddress(from), geocodeAddress(to)]);
+  if (!fromGeo || !toGeo) { toast('⚠️ 주소를 인식하지 못했습니다. 더 구체적으로 입력해 주세요.'); return; }
+
+  toast('🔍 수요를 게시하고 기사 응답을 기다리는 중…');
+  let demand;
+  try {
+    const r = await fetch(`${PROXY_URL}/match/demand`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        guid: _matchGuid(), demand_type: 'ride',
+        from_lat: fromGeo.lat, from_lng: fromGeo.lng, from_label: from,
+        to_lat: toGeo.lat, to_lng: toGeo.lng, to_label: to,
+      }),
+    });
+    const d = await r.json();
+    if (!r.ok) { toast(`⚠️ 요청 실패: ${d.detail||d.code||'오류'}`); return; }
+    demand = d.demand;
+  } catch(e) { toast('⚠️ 서버에 연결할 수 없습니다.'); return; }
+
+  _activeDemandId = demand.id;
+  document.getElementById('vehicle-results').style.display='block';
+  document.getElementById('vehicle-grid-body').innerHTML =
+    '<div style="color:var(--txt3);font-size:13px;padding:8px 0">게시 완료 — 기사 응답을 기다리는 중입니다. (최대 30분)</div>';
+
   _sendPdvReport({
-    type:    'traffic_ride_request',
-    role:    'passenger',
-    label:   from,
-    summary: `이동 요청: ${from} → ${to}`,
-    goal:    '최적 교통 수단 탐색',
+    type: 'traffic_ride_request', role: 'passenger', label: from,
+    summary: `이동 요청 게시: ${from} → ${to}`, goal: '최적 교통 수단 탐색',
   });
-  setTimeout(()=>{document.getElementById('vehicle-results').style.display='block';toast('✅ 3개 차량을 찾았습니다!');},1200);
-}
-function requestRide(name){
-  toast(`📨 ${name}에게 탑승 요청을 전송했습니다. PDV 신원 확인 후 수락을 기다립니다.`);
-  // PDV: 탑승 시작 기록
-  const from=document.getElementById('req-from')?.value.trim()||'출발지';
-  const to=document.getElementById('req-to')?.value.trim()||'목적지';
-  _sendPdvReport({
-    type:    'traffic_ride_start',
-    role:    'passenger',
-    label:   from,
-    summary: `탑승 요청: ${from} → ${to} | 운전자 ${name}`,
-    goal:    '탑승 기록 보관 및 범죄·분쟁 예방',
+
+  _connectDemandChannel(demand.id, (ev) => {
+    if (ev.type === 'offer_created') _renderOfferCard(ev, 'vehicle-grid-body', demand.id);
   });
 }
 
+function _connectDemandChannel(demandId, onEvent) {
+  try { _activeDemandWs?.close(); } catch(e){}
+  const ws = new WebSocket(_wsUrl(`/match/ws/demand/${demandId}`));
+  ws.onmessage = (m) => { try { onEvent(JSON.parse(m.data)); } catch(e){} };
+  ws.onerror = () => console.warn('[K-Traffic] 실시간 채널 오류(폴링으로 자동 대체되진 않음 — 화면 새로고침 필요할 수 있음)');
+  _activeDemandWs = ws;
+  return ws;
+}
+
+function _renderOfferCard(ev, containerId, demandId) {
+  const box = document.getElementById(containerId);
+  if (box.querySelector('[style*="아직 응답한"], [style*="게시 완료"]')) box.innerHTML = '';
+  const card = document.createElement('div');
+  card.className = 'vehicle-card';
+  card.innerHTML = `<div class="v-type vt-car">🚗 기사 응답</div>
+    <div class="v-name">기사 #${ev.offer_id.slice(0,6)}</div>
+    <div class="v-info">현재 위치 기준 약 ${ev.distance_km!=null?ev.distance_km.toFixed(1):'?'} km 거리</div>
+    <div class="v-row"><span class="v-avail">● 응답함</span><span>요금은 만나서 협의</span></div>
+    <div class="v-actions">
+      <button class="v-btn" onclick="acceptOffer('${ev.offer_id}','${demandId}')">수락</button>
+      <button class="v-btn-g" onclick="rejectOffer('${ev.offer_id}')">거절</button>
+    </div>`;
+  box.appendChild(card);
+}
+
+async function acceptOffer(offerId, demandId) {
+  if (!_requireAuth()) return;
+  toast('처리 중…');
+  try {
+    const r = await fetch(`${PROXY_URL}/match/offer/${offerId}/accept`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ guid: _matchGuid() }),
+    });
+    const d = await r.json();
+    if (!r.ok) { toast(`⚠️ 수락 실패: ${d.detail||d.code||'오류'}`); return; }
+    toast('✅ 매칭 완료! 기사와 직접 만나서 이동한 뒤, 완료 시 결제해 주세요.');
+    show('matching', document.querySelector('.sb-item[onclick*="matching"]'));
+    _renderActiveTrip(d.trip, d.offer);
+    _sendPdvReport({
+      type:'traffic_ride_start', role:'passenger', label:'탑승 수락',
+      summary:`탑승 수락 — trip ${d.trip.id}`, goal:'탑승 기록 보관 및 범죄·분쟁 예방',
+    });
+  } catch(e) { toast('⚠️ 서버에 연결할 수 없습니다.'); }
+}
+
+async function rejectOffer(offerId) {
+  try {
+    await fetch(`${PROXY_URL}/match/offer/${offerId}/reject`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ guid: _matchGuid() }),
+    });
+    toast('응답을 거절했습니다.');
+  } catch(e) {}
+}
+
+function _renderActiveTrip(trip, offer) {
+  document.getElementById('matching-status-badge').textContent = '매칭 완료';
+  document.getElementById('matching-status-badge').style.cssText = 'background:#dbeafe;color:#1d4ed8';
+  document.getElementById('matching-status-body').innerHTML = `
+    <div class="alert-row"><div class="alert-dot" style="background:var(--blue)"></div>
+      <div class="alert-info"><div class="alert-t">매칭된 기사와 이동 중</div>
+      <div class="alert-d">trip #${trip.id.slice(0,8)} · 완료 후 아래에서 결제해 주세요</div></div>
+      <span class="badge b-blue">진행 중</span></div>
+    <div style="margin-top:14px;padding:14px;background:#f9fafb;border-radius:9px">
+      <div class="f-group"><label class="f-label">기사 GUID(매칭 화면에서 확인)</label>
+        <input class="f-input" id="pay-driver-guid" value="${offer.driver_guid||''}" placeholder="자동 입력 안 되면 기사에게 직접 확인"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="f-group"><label class="f-label">결제 금액(GDC)</label><input type="number" class="f-input" id="pay-amount" min="1"></div>
+        <div class="f-group"><label class="f-label">메모(선택)</label><input class="f-input" id="pay-memo" placeholder="예: 한림→도청"></div>
+      </div>
+      <button class="f-btn-full" onclick="payAndCompleteTrip('${trip.id}')">결제하고 완료 처리</button>
+      <div style="font-size:11px;color:var(--txt3);margin-top:6px">※ 요금은 자동 산정되지 않습니다 — 기사와 직접 협의한 금액을 입력해 주세요.</div>
+    </div>`;
+}
+
+async function payAndCompleteTrip(tripId) {
+  const toGuid = document.getElementById('pay-driver-guid')?.value.trim();
+  const amount = Number(document.getElementById('pay-amount')?.value);
+  const memo = document.getElementById('pay-memo')?.value.trim() || '';
+  if (!toGuid) { toast('⚠️ 기사 GUID를 확인해 주세요.'); return; }
+  if (!(amount > 0)) { toast('⚠️ 결제 금액을 입력해 주세요.'); return; }
+  if (!window.gopangWallet?.sendGdc) { toast('⚠️ 지갑이 준비되지 않았습니다.'); return; }
+  toast('💳 결제 처리 중…');
+  try {
+    const result = await window.gopangWallet.sendGdc({ toGuid, amount, memo, purpose: 'transfer' });
+    const r = await fetch(`${PROXY_URL}/match/trip/${tripId}/complete`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ guid: _matchGuid(), gdc_tx_hash: result.tx_hash }),
+    });
+    const d = await r.json();
+    if (!r.ok) { toast(`⚠️ 완료 처리 실패(결제는 됐을 수 있음): ${d.detail||d.code||'오류'}`); return; }
+    toast('✅ 결제 완료! 이용해 주셔서 감사합니다.');
+    document.getElementById('matching-status-badge').textContent = '완료';
+    document.getElementById('matching-status-body').innerHTML = '<div style="color:var(--txt3);font-size:13px">이 매칭은 완료되었습니다. 새 이동을 원하시면 \'이동 요청\' 패널을 이용해 주세요.</div>';
+  } catch(e) { toast(`⚠️ 결제 실패: ${e.message}`); }
+}
+
+/* ── 물류: 화물 수요 ── */
+async function searchCargoVehicles() {
+  if (!_requireAuth()) return;
+  const from=document.getElementById('cargo-from').value.trim();
+  const to=document.getElementById('cargo-to').value.trim();
+  const spec=document.getElementById('cargo-spec').value;
+  const weight=document.getElementById('cargo-weight').value;
+  if(!from||!to){toast('수거지와 배송지를 입력해 주세요.');return;}
+  toast('📍 주소를 좌표로 변환하는 중…');
+  const [fromGeo, toGeo] = await Promise.all([geocodeAddress(from), geocodeAddress(to)]);
+  if (!fromGeo || !toGeo) { toast('⚠️ 주소를 인식하지 못했습니다.'); return; }
+  try {
+    const r = await fetch(`${PROXY_URL}/match/demand`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        guid: _matchGuid(), demand_type: 'cargo',
+        from_lat: fromGeo.lat, from_lng: fromGeo.lng, from_label: from,
+        to_lat: toGeo.lat, to_lng: toGeo.lng, to_label: to,
+        cargo_detail: `${spec} · ${weight||'?'}kg`,
+      }),
+    });
+    const d = await r.json();
+    if (!r.ok) { toast(`⚠️ 요청 실패: ${d.detail||d.code||'오류'}`); return; }
+    document.getElementById('cargo-results').style.display='block';
+    document.getElementById('cargo-grid-body').innerHTML = '<div style="color:var(--txt3);font-size:13px">게시 완료 — 기사 응답을 기다리는 중입니다.</div>';
+    _connectDemandChannel(d.demand.id, (ev) => {
+      if (ev.type === 'offer_created') _renderOfferCard(ev, 'cargo-grid-body', d.demand.id);
+    });
+  } catch(e) { toast('⚠️ 서버에 연결할 수 없습니다.'); }
+}
+
+/* ── 기사: 등록·위치·수요 수신 ── */
+let _driverVehicleId = null;
+let _positionWatchId = null;
+let _lastPositionSentAt = 0;
+let _regionWs = null;
+let _driverGeohashCell = null;
+
+function initDriverPanel() {
+  if (!_requireAuth()) return;
+  _driverVehicleId = localStorage.getItem('match_vehicle_id');
+  const regCard = document.getElementById('driver-register-card');
+  const statusLine = document.getElementById('driver-status-line');
+  if (!_driverVehicleId) {
+    regCard.style.display = 'block';
+    statusLine.style.display = 'none';
+  } else {
+    regCard.style.display = 'none';
+    statusLine.style.display = 'block';
+    statusLine.textContent = '기사로 등록됨 — 위치 공유 시작 중…';
+    _startPositionWatch();
+  }
+}
+
+async function registerAsDriver() {
+  if (!_requireAuth()) return;
+  const vehicleType = document.getElementById('drv-vehicle-type').value;
+  const capacity = Number(document.getElementById('drv-capacity').value);
+  if (!(capacity > 0)) { toast('⚠️ 인원/중량을 입력해 주세요.'); return; }
+  toast('등록 중…');
+  try {
+    const r = await fetch(`${PROXY_URL}/match/vehicle/register`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ guid: _matchGuid(), vehicle_type: vehicleType, capacity }),
+    });
+    const d = await r.json();
+    if (!r.ok) { toast(`⚠️ 등록 실패: ${d.detail||d.code||'오류'}`); return; }
+    _driverVehicleId = d.vehicle.id;
+    localStorage.setItem('match_vehicle_id', _driverVehicleId);
+    toast('✅ 기사 등록 완료 — 위치 공유를 시작합니다.');
+    document.getElementById('driver-register-card').style.display='none';
+    document.getElementById('driver-status-line').style.display='block';
+    _startPositionWatch();
+  } catch(e) { toast('⚠️ 서버에 연결할 수 없습니다.'); }
+}
+
+function _startPositionWatch() {
+  if (!navigator.geolocation) { toast('⚠️ 이 브라우저는 위치 공유를 지원하지 않습니다.'); return; }
+  if (_positionWatchId != null) return;
+  _positionWatchId = navigator.geolocation.watchPosition((pos) => {
+    const now = Date.now();
+    if (now - _lastPositionSentAt < 25000) return; // 25초 스로틀
+    _lastPositionSentAt = now;
+    _sendPosition(pos.coords.latitude, pos.coords.longitude);
+  }, (err) => {
+    toast('⚠️ 위치 권한이 필요합니다 — 수요 수신을 위해 허용해 주세요.');
+  }, { enableHighAccuracy: false, maximumAge: 20000, timeout: 15000 });
+}
+
+async function _sendPosition(lat, lng) {
+  try {
+    await fetch(`${PROXY_URL}/match/vehicle/position`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ guid: _matchGuid(), lat, lng, status: 'available' }),
+    });
+    const cell = geohashEncode(lat, lng, 5);
+    if (cell !== _driverGeohashCell) {
+      _driverGeohashCell = cell;
+      _connectRegionChannel(cell);
+    }
+    document.getElementById('driver-status-line').textContent = `위치 공유 중 · 셀 ${cell}`;
+  } catch(e) { console.warn('[K-Traffic] 위치 전송 실패:', e.message); }
+}
+
+function _connectRegionChannel(cell) {
+  try { _regionWs?.close(); } catch(e){}
+  const ws = new WebSocket(_wsUrl(`/match/ws/region/${cell}`));
+  ws.onmessage = (m) => {
+    try {
+      const ev = JSON.parse(m.data);
+      if (ev.type === 'demand_posted') _renderIncomingDemand(ev);
+    } catch(e){}
+  };
+  _regionWs = ws;
+}
+
+function _renderIncomingDemand(ev) {
+  const box = document.getElementById('driver-request-card');
+  box.innerHTML = `<div class="card" style="border:1.5px solid var(--blue)">
+    <div class="card-hd"><span class="card-hd-t">🔔 새 ${ev.demand_type==='cargo'?'배송':'탑승'} 요청</span></div>
+    <div class="card-bd">
+      <div style="font-size:13px;line-height:1.8;margin-bottom:14px">
+        <strong>출발지:</strong> ${ev.from_label||'-'}<br>
+        <strong>목적지:</strong> ${ev.to_label||'-'}<br>
+        요금은 매칭 후 직접 협의합니다.
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="v-btn" style="flex:2" onclick="submitOfferAsDriver('${ev.demand_id}')">응답하기</button>
+        <button class="v-btn-g" style="flex:1" onclick="document.getElementById('driver-request-card').innerHTML='<div class=\\'card\\'><div class=\\'card-bd\\' style=\\'color:var(--txt3);font-size:13px\\'>대기 중 — 새 요청이 오면 여기 표시됩니다.</div></div>'">무시</button>
+      </div>
+    </div></div>`;
+}
+
+async function submitOfferAsDriver(demandId) {
+  if (!_driverVehicleId) { toast('⚠️ 먼저 기사로 등록해 주세요.'); return; }
+  toast('응답 전송 중…');
+  try {
+    const r = await fetch(`${PROXY_URL}/match/offer`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ guid: _matchGuid(), vehicle_id: _driverVehicleId, demand_id: demandId }),
+    });
+    const d = await r.json();
+    if (!r.ok) { toast(`⚠️ 응답 실패: ${d.detail||d.code||'오류'}`); return; }
+    toast('📨 응답을 전송했습니다 — 승객의 수락을 기다립니다.');
+    document.getElementById('driver-request-card').innerHTML =
+      '<div class="card"><div class="card-bd" style="color:var(--txt3);font-size:13px">응답 전송됨 — 승객 수락 대기 중.</div></div>';
+    _connectDemandChannel(demandId, (ev) => {
+      if (ev.type === 'offer_accepted' && ev.offer_id === d.offer.id) {
+        toast('✅ 승객이 수락했습니다! 탑승 위치로 이동해 주세요.');
+      }
+    });
+  } catch(e) { toast('⚠️ 서버에 연결할 수 없습니다.'); }
+}
+
+/* ── GDC 지갑: 잔액·거래내역 ── */
+async function loadWalletBalance() {
+  const guid = _matchGuid();
+  const elGdc = document.getElementById('wallet-balance-gdc');
+  const elKrw = document.getElementById('wallet-balance-krw');
+  if (!guid || !elGdc) return;
+  try {
+    const r = await fetch(`${PROXY_URL}/biz/balance?guid=${encodeURIComponent(guid)}`);
+    const d = await r.json();
+    if (!d.ok) { elGdc.innerHTML = '조회 실패'; return; }
+    elGdc.innerHTML = `${d.balance} <span style="font-size:18px;font-weight:500;color:#93c5fd">GDC</span>`;
+    if (elKrw) elKrw.textContent = '';
+  } catch(e) { elGdc.textContent = '조회 실패'; }
+}
+
+async function loadWalletHistory() {
+  const guid = _matchGuid();
+  const tbody = document.getElementById('wallet-tx-tbody');
+  if (!guid || !tbody) return;
+  const wallet = window.gopangWallet;
+  if (!wallet?.signPayload) { tbody.innerHTML = '<tr><td colspan="4" style="color:var(--txt3)">지갑이 준비되지 않았습니다.</td></tr>'; return; }
+  tbody.innerHTML = '<tr><td colspan="4" style="color:var(--txt3)">불러오는 중…</td></tr>';
+  try {
+    const pubkey = wallet.publicKeyB64u || wallet.publicKeyB64 || '';
+    const ts = Date.now().toString();
+    const sigMsg = `tx-history:${guid}:${pubkey}:${ts}`;
+    const sig = await wallet.signPayload(sigMsg);
+    const q = `guid=${encodeURIComponent(guid)}&pubkey=${encodeURIComponent(pubkey)}&signature=${encodeURIComponent(sig)}&ts=${encodeURIComponent(ts)}&limit=15`;
+    const r = await fetch(`${PROXY_URL}/biz/tx-history?${q}`);
+    const d = await r.json();
+    if (!r.ok || !d.items?.length) { tbody.innerHTML = '<tr><td colspan="4" style="color:var(--txt3)">거래 내역이 없습니다.</td></tr>'; return; }
+    tbody.innerHTML = d.items.map(tx => `<tr>
+      <td>${new Date(tx.created).toLocaleString('ko-KR')}</td>
+      <td>${tx.memo||tx.block_type}</td>
+      <td>${tx.direction==='debit'?'지출':'수입'}</td>
+      <td style="color:${tx.direction==='debit'?'var(--danger)':'var(--green)'}">${tx.direction==='debit'?'-':'+'}${tx.amount} GDC</td>
+    </tr>`).join('');
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="4" style="color:var(--txt3)">조회 실패: ${e.message}</td></tr>`; }
+}
+
+/* ── 이용 기록 / 운행 통계 ── */
+async function loadRideHistory() {
+  const guid = _matchGuid();
+  const tbody = document.getElementById('history-tbody');
+  if (!tbody) return;
+  if (!guid) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--txt3)">로그인이 필요합니다.</td></tr>'; return; }
+  try {
+    const r = await fetch(`${PROXY_URL}/match/history?guid=${encodeURIComponent(guid)}&role=passenger`);
+    const d = await r.json();
+    if (!d.history?.length) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--txt3)">이용 기록이 없습니다.</td></tr>'; return; }
+    tbody.innerHTML = d.history.map(h => `<tr>
+      <td>${new Date(h.created_at).toLocaleString('ko-KR')}</td>
+      <td>${h.from_label||'-'}</td><td>${h.to_label||'-'}</td>
+      <td>${h.gdc_tx_hash ? h.gdc_tx_hash.slice(0,10)+'…' : '-'}</td>
+      <td><span class="badge ${h.trip_status==='completed'?'b-done':'b-blue'}">${h.trip_status||h.demand_status}</span></td>
+    </tr>`).join('');
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="5" style="color:var(--txt3)">조회 실패</td></tr>`; }
+}
+
+async function loadDriverStats() {
+  const guid = _matchGuid();
+  if (!guid) return;
+  loadWalletBalance();
+  const balGdc = document.getElementById('drv-wallet-balance-gdc');
+  try {
+    const r = await fetch(`${PROXY_URL}/biz/balance?guid=${encodeURIComponent(guid)}`);
+    const d = await r.json();
+    if (d.ok && balGdc) balGdc.innerHTML = `${d.balance} <span style="font-size:18px;font-weight:500;color:#93c5fd">GDC</span>`;
+    if (d.ok) document.getElementById('drv-stat-gdc').textContent = d.balance;
+  } catch(e) {}
+
+  const tbody = document.getElementById('drv-history-tbody');
+  try {
+    const r = await fetch(`${PROXY_URL}/match/history?guid=${encodeURIComponent(guid)}&role=driver`);
+    const d = await r.json();
+    document.getElementById('drv-stat-rides').textContent = d.history?.filter(h=>h.trip_status==='completed').length ?? 0;
+    if (!d.history?.length) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--txt3)">운행 기록이 없습니다.</td></tr>'; return; }
+    tbody.innerHTML = d.history.map(h => `<tr>
+      <td>${new Date(h.created_at).toLocaleString('ko-KR')}</td>
+      <td>${h.from_label||'-'} → ${h.to_label||'-'}</td>
+      <td>${h.distance_km!=null?h.distance_km.toFixed(1)+' km':'-'}</td>
+      <td>${h.gdc_tx_hash ? h.gdc_tx_hash.slice(0,10)+'…' : '-'}</td>
+      <td><span class="badge ${h.trip_status==='completed'?'b-done':'b-blue'}">${h.trip_status||'대기'}</span></td>
+    </tr>`).join('');
+  } catch(e) { if(tbody) tbody.innerHTML = '<tr><td colspan="5" style="color:var(--txt3)">조회 실패</td></tr>'; }
+}
+
+/* ── 긴급 신고: 정직화 — 자동 경찰연동 없음, 본인 PDV 기록만 ── */
 function emergencyReport(){
-  toast('🚨 112 연결 중… 현재 위치와 탑승 기록 전송 중');
+  toast('📝 탑승 기록을 PDV에 남겼습니다. 위급 상황이면 112/119에 직접 전화하세요.');
   _sendPdvReport({
     type:    'traffic_emergency',
     role:    'passenger',
-    label:   '긴급 신고',
-    summary: '긴급 신고: 112 연결 요청',
-    goal:    '범죄·사고 증거 보존 및 즉각 대응',
+    label:   '긴급 상황 기록',
+    summary: '사용자가 긴급 상황 기록 버튼을 눌러 탑승 정보를 PDV에 남김(자동 신고 아님)',
+    goal:    '증거 보존 — 신고는 사용자가 직접 112/119로 수행',
   });
 }
 
