@@ -282,7 +282,7 @@ const PDV = {
       content_hash: await _hashReport({ id, userMsg, now }),
       who:  { ipv6, role: 'user', recipients: ['gopang-pdv'] },
       when: { generated_at: now, period_start: now, period_end: now },
-      where: { svc_url: `https://${svc}.gopang.net`, label: 'AI 상담' },
+      where: { svc_url: `https://${svc}.hondi.net`, label: 'AI 상담' },
       what: {
         summary:   `AI 상담 (${category}): ${userMsg.slice(0, 60)}`,
         user_msg:  userMsg,
