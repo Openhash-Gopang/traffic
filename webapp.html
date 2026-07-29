@@ -353,7 +353,13 @@ const K_TRAFFIC_METHODOLOGY = `절대 규칙:
    관련 사건·과태료 번호(있다면).
 7. 완벽주의에 빠지지 않는다 — 보통 3~5회 질문이면 충분한 정보가 모인다.
 
-사용자에게 보여줄 답변 본문을 먼저 쓰고, 맨 마지막 줄에 반드시 아래 형식의
+7. 이번 턴에 [GOV_TASK_DRAFT_REQUEST]·[GOV_TASK_SUBMIT_REQUEST] 태그(당신
+   상위 문서가 정의하는 규격 그대로) 중 하나를 이미 출력했다면, 그 턴에는
+   아래 상태 마커를 덧붙이지 않는다 — 두 형식을 한 응답에 같이 낼 필요가
+   없다. 접수·처리는 상위 문서의 기준을 따르고, 이 인터뷰 방법론은 그
+   판단이 끝난 뒤 "무엇을 더 물어야 하는지"에만 쓴다.
+
+위 태그를 이번 턴에 내지 않는 일반 인터뷰 응답이면, 사용자에게 보여줄 답변 본문을 먼저 쓰고, 맨 마지막 줄에 반드시 아래 형식의
 상태 마커를 한 줄로 덧붙인다(시스템이 파싱만 하고 사용자에게는 보이지
 않으므로, 자연스러운 대화 톤 유지에만 신경 쓰면 된다). 각 필드는 반드시
 100자 이내로 짧게 요약해 누적하라:
@@ -702,6 +708,11 @@ async function _handleInterviewTurn(text) {
   try {
     const raw = await _govCall(conversationState.messages, { maxTokens: 800 });
     typing.remove();
+
+    // GOV_TASK_DRAFT_REQUEST / GOV_TASK_SUBMIT_REQUEST 처리 (2026-07-29 신설)
+    // — 처리됐으면 기존 STATE 마커 인터뷰 흐름으로 넘어가지 않는다.
+    if (await _handleGovTaskAndRouteTags(raw)) return;
+
     const { visible, state } = _parseInterviewState(raw);
     conversationState.messages.push({ role:'assistant', content: raw });
 
@@ -732,6 +743,75 @@ async function _handleInterviewTurn(text) {
 // 안내문 생성 — K-Law의 STEP 0~C처럼 무거운 다단계 생성이 필요 없어
 // 단일 호출로 처리한다(gov-flash 티어, 추론 불필요).
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// GOV_TASK_DRAFT_REQUEST / GOV_TASK_SUBMIT_REQUEST 처리 (2026-07-29 신설).
+// worker.js가 이 agency 자신의 정본 SP(_fetchOwnSpAndGates)를 실제로
+// 싣기 시작하면서 이 태그들을 처음으로 낼 수 있게 됐다. gopang 허브의
+// call-ai.js에 있는 _handleGovTaskTags와 동일한 서버 엔드포인트를
+// 재사용하되, 이 파일엔 그쪽의 history/sendFn 재귀 디스패치 체계가
+// 없으므로 conversationState.messages 기반 단일 루프에 맞춰 다시 짰다.
+// (public.hondi.net에 먼저 적용한 것과 동일한 패턴 — 2026-07-29)
+// ══════════════════════════════════════════════════════════════
+async function _handleGovTaskAndRouteTags(raw) {
+  const draftMatch = raw.match(/\[GOV_TASK_DRAFT_REQUEST\]([\s\S]*?)\[\/GOV_TASK_DRAFT_REQUEST\]/);
+  if (draftMatch) return await _submitGovTaskTag(raw, draftMatch, '/gov/task/schema/draft', 'GOV_TASK_DRAFT_REQUEST');
+
+  const submitMatch = raw.match(/\[GOV_TASK_SUBMIT_REQUEST\]([\s\S]*?)\[\/GOV_TASK_SUBMIT_REQUEST\]/);
+  if (submitMatch) return await _submitGovTaskTag(raw, submitMatch, '/gov/task/submit', 'GOV_TASK_SUBMIT_REQUEST');
+
+  return false;
+}
+
+// 공통 처리부 — JSON 페이로드를 서버에 POST하고, 결과를 다시 모델에게
+// 넘겨 자연스러운 문장으로 정리시킨다(§접수번호 면책문구: receipt_no·
+// disclaimer·schema_verified는 절대 요약·생략 금지).
+async function _submitGovTaskTag(raw, match, path, tagName) {
+  const visibleBefore = raw.slice(0, match.index).trim();
+  if (visibleBefore) appendBubble('ai', escHtml(visibleBefore).replace(/\n/g, '<br>'));
+  conversationState.messages.push({ role: 'assistant', content: raw });
+
+  let payload = null;
+  try {
+    payload = JSON.parse(match[1].trim());
+  } catch (e) {
+    appendBubble('ai', `⚠ 요청 형식 오류로 ${tagName === 'GOV_TASK_SUBMIT_REQUEST' ? '접수' : '조사 저장'}가 되지 않았습니다. 다시 한번 말씀해 주시겠어요?`);
+    return true;
+  }
+
+  const typing = appendTyping();
+  let resultText;
+  try {
+    const res = await fetch(`${PROXY}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...payload, guid: _govGuid() }),
+    });
+    const data = await res.json().catch(() => null);
+    resultText = JSON.stringify(data);
+  } catch (e) {
+    resultText = `{"error":"${e.message}"}`;
+  }
+
+  const followUp = [
+    ...conversationState.messages,
+    { role: 'user', content:
+      `[시스템: ${tagName} 결과 — receipt_no·disclaimer·schema_verified 필드는 ` +
+      `절대 요약·생략하지 말고 그 의미를 온전히 사용자에게 전달하세요` +
+      `(§접수번호 면책문구 참조). 서버 호출이 실패했으면 "접수했습니다"라고 ` +
+      `말하지 말고 실패 사실을 정직하게 알리세요.]\n${resultText}` },
+  ];
+  try {
+    const narration = await _govCall(followUp, { maxTokens: 500 });
+    conversationState.messages.push({ role: 'assistant', content: narration });
+    typing.remove();
+    appendBubble('ai', escHtml(narration).replace(/\n/g, '<br>'));
+  } catch (e) {
+    typing.remove();
+    appendBubble('ai', `⚠ 결과를 정리하는 중 오류가 발생했습니다: ${escHtml(e.message)}`);
+  }
+  return true;
+}
+
 async function runGuidanceGen() {
   const cs = conversationState.caseState || {};
   const typing = appendTyping();
