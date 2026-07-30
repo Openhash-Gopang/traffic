@@ -277,6 +277,19 @@ if (_qs.get('ctx')) {
       : decodeURIComponent(_qs.get('ctx'));
   } catch(e) { GWP_CTX = ''; }
 }
+// ★ 2026-07-30 신설 — engine.js의 _gwpLaunch()가 보내는 facts(currentLocation)
+// 파싱. K-Public(webapp.html)에서 같은 패턴으로 이미 적용·검증했다(주피터
+// 지시 — gov 도메인 전체로 확장). SP 문구로 "위치를 묻지 말라"고 지시하는
+// 대신, 코드가 이 값을 직접 확보해 서버(handleGovRelay)로 전달한다.
+let GWP_FACTS = null;
+if (_qs.get('facts')) {
+  try {
+    const raw = (_qs.get('facts_enc') === 'b64')
+      ? decodeURIComponent(escape(atob(_qs.get('facts'))))
+      : decodeURIComponent(_qs.get('facts'));
+    GWP_FACTS = JSON.parse(raw);
+  } catch (e) { console.warn('[GWP] facts 파싱 실패(무시):', e.message); GWP_FACTS = null; }
+}
 let _gwpSeedUsed = false;
 const _sessionId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2));
 const _sessionStartedAt = new Date().toISOString();
@@ -483,6 +496,9 @@ async function _govCallRaw(messages, opts = {}) {
     body: JSON.stringify({
       guid: _govGuid(), agency: AGENCY_ID, agencyPrompt: AGENCY_PROMPT,
       messages, max_tokens: maxTokens, stream, tier: GOV_TIER,
+      // ★ 2026-07-30 — 서버(handleGovRelay)가 위치·날짜를 강제 주입하도록
+      // 원본 위치값을 함께 보낸다.
+      currentLocation: GWP_FACTS?.currentLocation || null,
     })
   });
 
