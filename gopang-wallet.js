@@ -35,6 +35,9 @@
   // 검증하는 방식이라 PRF가 애초에 필요 없다 — 완전히 독립된 credential
   // 로 분리해, PRF 미지원 기기에서도 재인증만큼은 등록되게 한다.
   const LS_STEPUP_CRED = 'gopang_wallet_stepup_cred_id';
+  // 2026-07-28 신설 — _deviceEntropy()가 navigator.userAgent 대신 쓰는
+  // 영구 랜덤 비밀값의 저장 키. 자세한 사유는 _deviceEntropy() 주석 참고.
+  const LS_DEVICE_SECRET = 'gopang_wallet_device_secret_v2';
   const WEBAUTHN_RP_ID   = 'hondi.net';  // 전체 hondi.net 서브도메인에서 credential 공유
   // PRF는 결정론적 — 동일 salt + 동일 authenticator = 항상 동일 32바이트.
   // 서버에 아무것도 저장할 필요 없음.
@@ -1087,17 +1090,47 @@
      * @param {string} [passphrase='']
      * @returns {GopangWallet|null}  — 지갑 없으면 null
      */
-    static async load(passphrase = '') {
+    // 신규 entropy(_deviceEntropy, 고정 비밀값)로 먼저 시도하고, 실패하면
+    // — PRF 미등록 상태(=원래도 device-entropy 경로였을 조건)에서만 —
+    // 구버전(UA 기반) entropy로 재시도한다. 그걸로 열리면 지갑이 예전
+    // 방식으로 암호화된 채 남아있던 것이 확인된 것이므로, 그 자리에서
+    // 새 entropy로 조용히 재암호화해 이후로는 UA 변동과 무관하게 열리도록
+    // 만든다(enrollWebAuthn()의 재암호화 패턴과 동일 원칙).
+    static async _decryptWithMigration(db, idbKeyName, record, passphrase) {
+      const encBuf = b64uToBuf(record.encPrivKey).buffer;
       try {
-        const db     = await openDB();
-        const record = await idbGet(db, IDB_KEY_ID);
-        if (!record) return null;
+        return await decryptPrivKey(encBuf, passphrase || await GopangWallet._webauthnEntropy());
+      } catch (e) {
+        const usingDeviceEntropy = !passphrase && !localStorage.getItem(LS_WEBAUTHN_CRED);
+        if (!usingDeviceEntropy) throw e;
+        const privRaw = await decryptPrivKey(encBuf, await GopangWallet._legacyDeviceEntropy()); // 실패 시 그대로 throw
+        try {
+          const reEnc = await encryptPrivKey(privRaw, await GopangWallet._deviceEntropy());
+          await idbPut(db, idbKeyName, { ...record, encPrivKey: bufToB64u(reEnc) });
+          console.info('[GopangWallet] 구버전(UA 기반) 암호화 감지 — 고정 비밀값 방식으로 자동 이전 완료:', idbKeyName);
+        } catch (migrateErr) {
+          console.warn('[GopangWallet] 마이그레이션 재암호화 실패(다음 세션에 재시도됨):', migrateErr.message);
+        }
+        return privRaw;
+      }
+    }
 
-        const encBuf = b64uToBuf(record.encPrivKey).buffer;
-        const privRaw = await decryptPrivKey(
-          encBuf,
-          passphrase || await GopangWallet._webauthnEntropy()
-        );
+    static async load(passphrase = '') {
+      const db     = await openDB();
+      const record = await idbGet(db, IDB_KEY_ID).catch(() => null);
+      if (!record) return null; // 진짜 최초 실행 — 이 경우에만 null을 반환한다
+
+      // ★ 2026-07-21 근본 수정 — 이전에는 아래 블록 전체가 하나의 try/catch에
+      // 묶여 있어서, "레코드가 아예 없음"과 "레코드는 있는데 이번 세션에서
+      // 못 엶(엔트로피 불일치·WebAuthn 실패 등)"이 똑같이 null로 뭉개졌다.
+      // 그 결과 싱글턴 초기화 쪽이 "최초 실행"으로 오판해 기존 계정과 무관한
+      // 새 키를 조용히 자동 생성하는 사고로 이어졌다(2026-07-21 실사로 확인).
+      // 지금은 "레코드가 있다"는 사실 자체가 이미 이 기기에 지갑이 존재한다는
+      // 증거이므로, 그 이후 단계(복호화·키 임포트)에서 실패하면 null이 아니라
+      // 구분 가능한 에러를 던진다 — 호출부가 "새로 만들어도 되는 상황"과
+      // "복구가 필요한 상황"을 반드시 구별하도록 강제한다.
+      try {
+        const privRaw = await GopangWallet._decryptWithMigration(db, IDB_KEY_ID, record, passphrase);
 
         // JWK 형식으로 복원
         // v6.0: extractable을 true로 — exportPrivateKey()(백업 키 내보내기)가
@@ -1122,11 +1155,7 @@
         let x25519PrivKey = null, x25519PubKey = null, x25519PubKeyB64u = null;
         const xRecord = await idbGet(db, IDB_X25519_ID).catch(() => null);
         if (xRecord) {
-          const xEncBuf = b64uToBuf(xRecord.encPrivKey).buffer;
-          const xPrivRaw = await decryptPrivKey(
-            xEncBuf,
-            passphrase || await GopangWallet._webauthnEntropy()
-          );
+          const xPrivRaw = await GopangWallet._decryptWithMigration(db, IDB_X25519_ID, xRecord, passphrase);
           const xPrivJwk = {
             kty: 'OKP', crv: 'X25519',
             x  : xRecord.publicKeyB64u,
@@ -1154,8 +1183,11 @@
           x25519PublicKeyB64u: x25519PubKeyB64u,
         });
       } catch (e) {
-        console.error('[GopangWallet] load 실패:', e);
-        return null;
+        console.error('[GopangWallet] 기존 지갑 복호화 실패(레코드는 존재함) — 원인 불명확한 채로 새 지갑을 자동 생성하지 않습니다:', e);
+        const err = new Error('WALLET_DECRYPT_FAILED');
+        err.cause = e;
+        err.code = 'WALLET_DECRYPT_FAILED';
+        throw err;
       }
     }
 
@@ -1313,10 +1345,35 @@
     }
 
     /* ── 내부: 기기 고유 entropy (passphrase 미사용 시 대체) ── */
+    // 2026-07-28 근본 수정 — navigator.userAgent는 "동일 기기·동일
+    // 브라우저"에서도 결정론적이지 않다: Chrome DevTools 기기 에뮬레이션이
+    // Responsive↔기기 프리셋 사이를 오가면 UA 문자열 자체가 바뀌고,
+    // 실사용 환경에서도 브라우저 자동 업데이트(버전 번호 변경)나 최근
+    // Chrome의 User-Agent Reduction 정책으로 UA가 언제든 달라질 수
+    // 있다. 그 결과 "지갑을 스스로 만든 직후, 같은 세션 안에서도 못 여는"
+    // 사고가 실사로 재현됐다 — 다른 기기가 아니라 이 함수 자체의 결함.
+    // UA 대신, 최초 1회 랜덤 발급해 localStorage에 영구 저장하는 고정
+    // 비밀값을 쓴다. push.js의 getOrCreateDeviceId()와 동일 패턴.
+    static async _deviceSecret() {
+      let secret = localStorage.getItem(LS_DEVICE_SECRET);
+      if (!secret) {
+        secret = bufToHex(crypto.getRandomValues(new Uint8Array(32)).buffer);
+        localStorage.setItem(LS_DEVICE_SECRET, secret);
+      }
+      return secret;
+    }
+
     static async _deviceEntropy() {
-      // UserAgent + 고정 salt → SHA-256 → hex
-      // 동일 기기+브라우저면 동일값, 완벽한 보안이 아님
-      // 프로덕션에서는 사용자 passphrase 권장
+      const secret = await GopangWallet._deviceSecret();
+      const buf = await sha256(secret + 'gopang-wallet-v1-entropy');
+      return bufToHex(buf);
+    }
+
+    // 구버전(UA 기반) entropy — 위 수정 이전에 이미 이 방식으로 암호화된
+    // 지갑을 열기 위한 마이그레이션 전용 경로. load()에서만 폴백으로
+    // 쓰이고, 새로 만드는 지갑은 전부 _deviceEntropy()(고정 비밀값)를
+    // 쓴다 — 이 함수로 새로 암호화하지 않는다.
+    static async _legacyDeviceEntropy() {
       const raw = navigator.userAgent + 'gopang-wallet-v1-entropy';
       const buf = await sha256(raw);
       return bufToHex(buf);
@@ -1657,6 +1714,149 @@
   GopangWallet.appendHashChain       = appendHashChain;
 
   /* ────────────────────────────────────────────────
+   *  4단계(2026-07-23) — 공용 PC 1회성 서명 위임
+   *  개인키를 이 PC로 옮기지 않고, 서명이 필요할 때마다 device-link.html을
+   *  팝업(purpose=sign_request)으로 열어 폰의 승인을 받고 서명 '결과'만
+   *  돌려받는다. 결과는 postMessage로 전달되며, 서명 자체는 검증 가능한
+   *  공개 정보라 봉투 암호화가 필요 없다(개인키만 절대 노출 안 되면 됨).
+   * ──────────────────────────────────────────────── */
+  function _openSignRequestPopup(sigMsg) {
+    return new Promise((resolve, reject) => {
+      const popup = window.open(
+        '/auth/device-link.html?purpose=sign_request&sigMsg=' + encodeURIComponent(sigMsg),
+        'gopang_sign_request', 'width=420,height=560,menubar=no,toolbar=no'
+      );
+      if (!popup) {
+        reject(new Error('팝업이 차단되었습니다 — 브라우저 설정에서 이 사이트의 팝업을 허용해 주세요.'));
+        return;
+      }
+      let settled = false;
+      const cleanup = () => {
+        window.removeEventListener('message', onMessage);
+        clearInterval(closedPoll);
+      };
+      function onMessage(ev) {
+        if (ev.origin !== location.origin) return;
+        if (ev.data?.type !== 'GOPANG_SIGN_RESULT') return;
+        if (settled) return;
+        settled = true;
+        cleanup();
+        if (ev.data.ok) resolve({ signature: ev.data.signature, publicKeyB64u: ev.data.publicKeyB64u, guid: ev.data.guid });
+        else reject(new Error(ev.data.error === 'expired' ? '승인 시간이 초과됐습니다.' : (ev.data.error || '서명 요청이 실패했습니다.')));
+      }
+      // 팝업을 사용자가 직접 닫아버린 경우(승인도 거부도 안 하고 그냥
+      // 닫음) — postMessage가 영영 안 오므로, 별도로 감지해서 reject
+      // 해야 sign()을 호출한 쪽의 Promise가 무기한 대기하지 않는다.
+      const closedPoll = setInterval(() => {
+        if (popup.closed && !settled) {
+          settled = true;
+          cleanup();
+          reject(new Error('사용자가 창을 닫았습니다.'));
+        }
+      }, 500);
+      window.addEventListener('message', onMessage);
+    });
+  }
+
+  // window.gopangWallet 자리에 들어가는 대체 객체 — 진짜 지갑(GopangWallet
+  // 인스턴스)과 달리 개인키를 전혀 갖지 않는다. 외부 호출부들은 전부
+  // window.gopangWallet?.method 형태(옵셔널 체이닝)로 접근하므로, 여기
+  // 정의 안 된 메서드(getBalance 등)는 자동으로 각 호출부의 기존
+  // guid-fallback 경로로 떨어진다 — 별도 스텁이 필요 없다.
+  class SessionSignProxy {
+    constructor() {
+      this.guid = null;
+      this.handle = null;
+      this._isSessionProxy = true;
+      // 2026-07-23 추가 — 사고실험 E11에서 발견: 거의 동시에 두 서명이
+      // 필요해지면 둘 다 같은 이름('gopang_sign_request')의 팝업을 열려고
+      // 해서, 두 번째 호출이 첫 번째가 아직 열어둔 팝업을 가로채(같은
+      // 이름의 창은 새로 열지 않고 기존 창을 재사용/네비게이트하는
+      // window.open() 표준 동작) 첫 번째 요청의 Promise가 응답을 영영
+      // 못 받고 멈출 수 있었다. 팝업을 여러 개 동시에 띄우는 대신, 모든
+      // .sign() 호출을 하나의 큐로 직렬화한다 — 한 번에 팝업은 항상
+      // 하나만 뜨고, 먼저 요청한 게 항상 먼저 처리된다.
+      this._queue = Promise.resolve();
+    }
+    setIdentity({ guid, handle } = {}) { this.guid = guid || null; this.handle = handle || null; }
+    sign(payload) {
+      const run = () => this._signOne(payload);
+      // 이전 서명이 성공했든 실패했든(예: 사용자가 팝업을 닫아 reject)
+      // 다음 서명 요청은 항상 이어서 실행돼야 하므로, 큐 자체는 끊기지
+      // 않게 별도로 이어붙인다. run()의 반환(성공/실패)은 그대로
+      // 호출자에게 전달한다.
+      const result = this._queue.then(run, run);
+      this._queue = result.then(() => {}, () => {});
+      return result;
+    }
+    async _signOne(payload) {
+      const { signature, guid } = await _openSignRequestPopup(String(payload));
+      // 첫 서명 성공 시점에야 서버(전화번호 조회 결과)로부터 실제 guid를
+      // 처음 알게 된다 — 공용 PC는 사전에 어떤 계정인지 전혀 모르는
+      // 상태에서 시작하기 때문. sessionStorage에만 남긴다(localStorage
+      // 아님 — 탭/브라우저를 닫으면 다음 사람에게 아무 흔적도 안 남아야
+      // 하는 공용 PC 원칙 유지).
+      if (guid && !this.guid) {
+        this.guid = guid;
+        try {
+          if (!sessionStorage.getItem('gopang_user_v4')) {
+            sessionStorage.setItem('gopang_user_v4', JSON.stringify({ ipv6: guid }));
+          }
+        } catch (e) { /* sessionStorage 접근 불가 환경 — 서명 자체엔 영향 없음 */ }
+      }
+      return signature;
+    }
+  }
+  GopangWallet.createSessionSignProxy = () => new SessionSignProxy();
+
+  /* ────────────────────────────────────────────────
+   *  5단계(2026-07-23) — 공용 PC PDV 원문 릴레이 (PC → 폰, B안)
+   *  공용 PC 세션에서 생긴 원문(채팅 등)을 이 PC에 남기지 않고, 폰의
+   *  이미 등록된 X25519 공개키로 암호화해 즉시 전달한다. 폰이 그 안에
+   *  안 켜지면(TTL 10분) 서버가 알아서 지운다 — 유실을 감수하는 대신
+   *  큐가 무한정 쌓이지 않는다(B안, 주피터 지시).
+   * ──────────────────────────────────────────────── */
+  GopangWallet.relayContentToPhone = async function(guid, plaintext) {
+    if (!guid) throw new Error('relayContentToPhone: guid가 필요합니다.');
+    const res = await fetch(`${WORKER_URL}/wallet/x25519?guid=${encodeURIComponent(guid)}`);
+    const data = await res.json().catch(() => ({}));
+    if (!data.ok || !data.registered || !data.x25519_pubkey) {
+      throw new Error(data.message || '수신자(폰)의 암호화 키를 찾을 수 없습니다.');
+    }
+    const sealed = await sealForRecipient(data.x25519_pubkey, plaintext);
+    const pushRes = await fetch(`${WORKER_URL}/pdv/relay/push`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ guid, sealed }),
+    });
+    const pushData = await pushRes.json().catch(() => ({}));
+    if (!pushRes.ok || !pushData.ok) throw new Error(pushData.detail || pushData.error || '전달에 실패했습니다.');
+    return pushData;
+  };
+
+  // 폰 쪽 — 대기 중인 릴레이 항목을 가져와 이 지갑의 개인키로 복호화한다.
+  // wallet은 이 폰의 진짜 GopangWallet 인스턴스(X25519 키 등록 완료 —
+  // ensureX25519Key() 먼저 호출된 상태)여야 한다. 복호화는 지갑이 이미
+  // 갖고 있는 wallet.openSealed()를 그대로 쓴다(X25519 개인키는 Ed25519
+  // 서명키와 별개 필드라 재구현하지 않고 기존 메서드를 재사용).
+  GopangWallet.pullRelayedContent = async function(wallet, guid) {
+    if (!wallet || typeof wallet.openSealed !== 'function') {
+      throw new Error('pullRelayedContent: 유효한 지갑 인스턴스가 필요합니다.');
+    }
+    const res = await fetch(`${WORKER_URL}/pdv/relay/pull?guid=${encodeURIComponent(guid)}`);
+    const data = await res.json().catch(() => ({}));
+    if (!data.ok) throw new Error(data.detail || data.error || '조회에 실패했습니다.');
+    const items = [];
+    for (const sealed of (data.items || [])) {
+      try {
+        items.push(await wallet.openSealed(sealed));
+      } catch (e) {
+        console.warn('[GopangWallet] 릴레이 항목 복호화 실패(건너뜀):', e.message);
+      }
+    }
+    return items;
+  };
+
+  /* ────────────────────────────────────────────────
    *  전역 노출
    * ──────────────────────────────────────────────── */
   global.GopangWallet = GopangWallet;
@@ -1669,15 +1869,71 @@
   /* ────────────────────────────────────────────────
    *  window.gopangWallet 싱글턴 자동 초기화
    *  gopang-app.js에서 window.gopangWallet.sign() 등으로 접근
-   *  지갑이 없으면 null — gopang-app.js _gwpSignExecute가 Phase 1 폴백 처리
+   *  2026-07-23 — 모바일 기기는 최초 실행 시 즉시 자동 생성(1기기 1사용자
+   *  전제). PC/미확인 기기는 자동 생성을 보류하고 gopangWalletNeedsSetup
+   *  플래그만 세운다 — window.gopangWallet은 null로 남고, 실제 서명이
+   *  필요해지는 순간 호출부가 계정 연결 흐름으로 안내한다(부록 A-1: PC가
+   *  먼저 키를 만들어 진짜 계정 키와 어긋나는 사고 방지).
    * ──────────────────────────────────────────────── */
   (async () => {
     try {
-      let wallet = await GopangWallet.load();
+      let wallet;
+      try {
+        wallet = await GopangWallet.load();
+      } catch (e) {
+        if (e?.code === 'WALLET_DECRYPT_FAILED') {
+          // ★ 2026-07-21 근본 수정 — 예전에는 load()가 이 경우도 그냥 null을
+          // 반환해서, 바로 아래 "최초 실행"과 구분이 안 됐고 결국 기존 계정과
+          // 무관한 새 키를 조용히 만들어버렸다(실사로 확인된 사고). 지금은
+          // 진짜로 이 기기에 지갑이 있었다는 게 확정된 상태이므로, 대체 지갑을
+          // 만들지 않고 잠금 상태로 멈춘다 — 사용자가 설정 화면에서 백업 키로
+          // 복구하거나, 다른 정상 기기에서 새로 device-link를 받아야 한다.
+          console.error('[GopangWallet] 기존 지갑을 열 수 없습니다(엔트로피/인증 불일치로 추정) — 백업 키 복구가 필요합니다. 새 지갑을 자동 생성하지 않습니다.');
+          global.gopangWallet = null;
+          global.gopangWalletLocked = true; // UI가 "복구 필요" 배너를 띄울 수 있도록 하는 신호
+          // 2026-07-23 신설 — 위 플래그를 실제로 구독하는 코드가 어디에도
+          // 없어서(실사로 확인), 지갑이 잠겨도 사용자에게는 아무 것도 안
+          // 보이고 이후 모든 서명 필요 기능이 콘솔 에러만 남긴 채 조용히
+          // 실패했다. 폴링으로 플래그를 확인하지 않아도 되도록, 페이지가
+          // 뜬 시점이 언제든 즉시 받을 수 있게 이벤트를 던진다.
+          try {
+            global.dispatchEvent?.(new CustomEvent('gopang:wallet-locked'));
+          } catch (e) { /* CustomEvent 미지원 환경 — 조용히 무시 */ }
+          return;
+        }
+        throw e; // 그 외 예상 못한 에러는 기존과 동일하게 바깥 catch로
+      }
       if (!wallet) {
-        // 최초 실행 — 자동 생성 (passphrase 없이 기기 entropy 사용)
-        wallet = await GopangWallet.create();
-        console.info('[GopangWallet] 새 지갑 자동 생성 완료');
+        // ★ 2026-07-23 근본 수정 — auth.js의 _isMobileDevice() 게이트("암호키
+        // 생성은 휴대폰에서만 — 부록 A-1")는 회원가입 *폼* 제출 시점만
+        // 지켜왔다. 그런데 이 부트스트랩은 그 폼과 무관하게 gopang-wallet.js가
+        // 로드되는 모든 페이지에서 무조건 실행돼서, 같은 사고(PC가 먼저 키를
+        // 만들어 나중에 진짜 계정의 키와 어긋남 — PUBKEY_MISMATCH)를 이
+        // 경로로는 계속 낼 수 있었다(실사로 재현됨). auth.js를 import하지
+        // 않는 독립 스크립트라 같은 판별 로직을 여기 그대로 복제한다(기준을
+        // 두 곳에서 다르게 두지 않기 위해 문구까지 동일하게 유지).
+        //
+        // 모바일: 기존과 동일하게 즉시 자동 생성(1기기 1사용자가 전제이므로
+        // 안전 — 폰이 진짜 신규가입 흐름에서 만드는 키와 지금 이 키가 같은
+        // 물리적 기기 위에서 만들어짐).
+        // PC/판별불가: 자동 생성을 보류한다. window.gopangWallet은 null로
+        // 남고, gopangWalletNeedsSetup=true만 세운다 — 배너를 여기서 바로
+        // 띄우지 않는다(둘러보기만 하는 방문자에게 불필요한 질문을 먼저
+        // 던지지 않기 위해). 실제로 서명이 필요한 순간에 그 호출부가 이
+        // 플래그를 보고 "이미 계정이 있나요?" 흐름으로 안내한다(다음 단계).
+        const _isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+        if (_isMobile) {
+          wallet = await GopangWallet.create();
+          console.info('[GopangWallet] 새 지갑 자동 생성 완료 (모바일 기기 확인됨)');
+        } else {
+          console.info('[GopangWallet] PC/미확인 기기 — 자동 생성 보류. 서명이 필요한 시점에 계정 연결 흐름으로 안내됩니다.');
+          global.gopangWallet = null;
+          global.gopangWalletNeedsSetup = true;
+          try {
+            global.dispatchEvent?.(new CustomEvent('gopang:wallet-setup-needed'));
+          } catch (e) { /* CustomEvent 미지원 환경 — 조용히 무시 */ }
+          return;
+        }
       }
 
       // gopang_user_v4에서 guid 연결
@@ -1704,11 +1960,138 @@
         } catch(e) {
           console.warn('[GopangWallet] 서버 동기화 실패 (무시):', e.message);
         }
+
+        // 5단계(2026-07-23) — 공용 PC 세션에서 이 계정 앞으로 릴레이된
+        // 원문이 있으면 가져와 복호화한다. 화면에 어떻게 보여줄지는 이
+        // 파일(모듈 아님, ui/bubble.js 등을 import 못 함)의 책임이 아니라
+        // 이벤트를 구독하는 쪽(추후 UI 작업)에 맡긴다 — 여기서는 인프라만
+        // 완성해둔다. 실패해도(오프라인 등) 앱 시작을 막지 않는다.
+        if (typeof wallet.openSealed === 'function' && GopangWallet.pullRelayedContent) {
+          try {
+            const items = await GopangWallet.pullRelayedContent(wallet, stored.ipv6);
+            if (items.length) {
+              console.info(`[GopangWallet] 공용 PC 릴레이 항목 ${items.length}건 수신`);
+              try {
+                global.dispatchEvent?.(new CustomEvent('gopang:relayed-content-received', { detail: { items } }));
+              } catch (e) { /* CustomEvent 미지원 환경 — 조용히 무시 */ }
+            }
+          } catch (e) {
+            console.warn('[GopangWallet] 릴레이 조회 실패 (무시):', e.message);
+          }
+        }
       }
 
       global.gopangWallet = wallet;
       console.info('[GopangWallet] 싱글턴 초기화 완료 | v' + VERSION
                    + ' | guid:', wallet.guid || '미연결');
+
+      // ── 같은 오리진 탭 간 SSO 서명 릴레이 (2026-07-21 신설) ──────────
+      // 오픈해시/고팡 원칙: "서명이 곧 증명, 서버는 검증만 한다" — 그런데
+      // 하위 서비스(klaw 등)가 SSO 확인용으로 만드는 보이지 않는 iframe은
+      // 사용자 제스처가 없어 WebAuthn(지문)을 새로 못 띄운다(실사로 확인).
+      // 이 문제를 서버 세션/쿠키로 우회하면 원칙이 깨지므로, 대신 "이미
+      // 이 오리진(hondi.net)에 지갑이 풀려 있는 다른 탭"에게 대신 서명해
+      // 달라고 부탁한다.
+      //
+      // ★ 2026-07-21 같은 날 재설계 — BroadcastChannel만으로는 실사에서
+      // 실패가 재현됐다. 최신 Chrome은 BroadcastChannel도 최상위 사이트
+      // (top-level site)별로 격리한다(스토리지 파티셔닝) — klaw.hondi.net
+      // 안의 숨은 iframe이 여는 채널과 이 탭(webapp.html, 최상위 사이트가
+      // hondi.net)이 여는 같은 이름의 채널은 최상위 사이트가 달라 서로
+      // 완전히 격리된다. postMessage는 스토리지가 아니라 "실제로 쥐고
+      // 있는 창 참조"로 통신하므로 이 제약을 받지 않는다 — 그 iframe은
+      // window.parent.opener(=klaw를 연 이 탭)로 직접 도달할 수 있다.
+      // 그래서 window 메시지 리스너를 주력으로 쓰고, BroadcastChannel은
+      // (같은 최상위 사이트 안의 다른 탭처럼 파티션이 같은 극히 일부
+      // 상황에 도움 될 수 있어) 보조로 남겨둔다.
+      const _handleSignRequest = async (msg) => {
+        // 서명 대상을 "auth-issue:" SSO 신원 증명 챌린지로만 엄격히
+        // 제한한다 — 임의 페이로드(거래 등)를 원격에서 서명시키는
+        // 통로가 되지 않도록 막는 안전장치다.
+        if (typeof msg?.sigMsg !== 'string' || !msg.sigMsg.startsWith('auth-issue:')) return null;
+        const parts = msg.sigMsg.split(':');
+        const msgTs = parseInt(parts[parts.length - 1], 10);
+        if (!msgTs || Math.abs(Date.now() - msgTs) > 30000) return null; // 재생 공격 방지
+        try {
+          const signature = await wallet.signPayload(msg.sigMsg);
+          return { signature, publicKeyB64u: wallet.publicKeyB64u, guid: wallet.guid };
+        } catch (e) { return null; }
+      };
+
+      // 주력 경로 — window postMessage (opener 체인, 파티셔닝 영향 없음)
+      // 두 메시지 종류를 함께 처리한다:
+      //  - GOPANG_SIGN_REQUEST: hondi.net 자신의 iframe(silent-auth.html)이
+      //    보내는 "이 챌린지에 서명만 해달라" 요청 — 보낸 쪽이 hondi.net
+      //    오리진 그 자체이므로 정확히 그 오리진만 신뢰한다.
+      //  - GOPANG_ISSUE_TOKEN_REQUEST (2026-07-21 신설) — klaw.hondi.net
+      //    등 하위 서비스의 최상위 창이 iframe도 안 거치고 window.opener로
+      //    직접 보내는 "나 대신 /auth/issue까지 전부 해서 완성된 토큰을
+      //    달라" 요청이다. 이 경우 보낸 쪽은 hondi.net이 아니라
+      //    klaw.hondi.net처럼 *.hondi.net 서브도메인이므로, 오리진 검사도
+      //    그에 맞게 서브도메인 전체를 허용한다 — 오픈해시 서비스가 아닌
+      //    임의 외부 사이트가 opener 참조를 얻어 악용하는 걸 막는 선이다.
+      const _isHondiOrigin = (origin) => /^https:\/\/([a-z0-9-]+\.)?hondi\.net$/.test(origin);
+
+      window.addEventListener('message', async (ev) => {
+        const msg = ev.data;
+        if (!msg) return;
+
+        if (msg.type === 'GOPANG_SIGN_REQUEST') {
+          if (ev.origin !== 'https://hondi.net') return; // hondi.net 오리진 프레임만 신뢰
+          const result = await _handleSignRequest(msg);
+          if (!result) return; // 실패 시 응답 안 함 — 요청 측은 자체 타임아웃으로 로컬 폴백
+          ev.source?.postMessage(
+            { type: 'GOPANG_SIGN_RESPONSE', requestId: msg.requestId, ...result },
+            ev.origin
+          );
+          return;
+        }
+
+        if (msg.type === 'GOPANG_ISSUE_TOKEN_REQUEST') {
+          if (!_isHondiOrigin(ev.origin)) return; // *.hondi.net 서비스만 신뢰
+          if (!wallet.guid) {
+            ev.source?.postMessage({ type: 'GOPANG_ISSUE_TOKEN_RESPONSE', requestId: msg.requestId, ok: false, reason: 'NOT_REGISTERED' }, ev.origin);
+            return;
+          }
+          const svc = typeof msg.svc === 'string' ? msg.svc : 'unknown';
+          const level = typeof msg.level === 'string' ? msg.level : 'L0';
+          const ts = Date.now();
+          const sigMsg = `auth-issue:${wallet.guid}:${wallet.publicKeyB64u}:${svc}:${ts}`;
+          try {
+            const signature = await wallet.signPayload(sigMsg);
+            const res = await fetch('https://hondi-proxy.tensor-city.workers.dev/auth/issue', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ guid: wallet.guid, pubkey: wallet.publicKeyB64u, signature, ts, level, svc }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data?.token) {
+              ev.source?.postMessage({ type: 'GOPANG_ISSUE_TOKEN_RESPONSE', requestId: msg.requestId, ok: false, reason: data?.code || `http_${res.status}` }, ev.origin);
+              return;
+            }
+            ev.source?.postMessage({
+              type: 'GOPANG_ISSUE_TOKEN_RESPONSE', requestId: msg.requestId, ok: true,
+              ipv6: wallet.guid, level: data.level || level,
+              exp: Math.floor(ts / 1000) + 3600, token: data.token,
+            }, ev.origin);
+          } catch (e) {
+            ev.source?.postMessage({ type: 'GOPANG_ISSUE_TOKEN_RESPONSE', requestId: msg.requestId, ok: false, reason: 'NETWORK' }, ev.origin);
+          }
+        }
+      });
+
+      // 보조 경로 — BroadcastChannel (같은 최상위 사이트 내 다른 탭 등
+      // 파티션이 우연히 같은 경우를 위해 유지, 미지원 브라우저는 무시)
+      try {
+        const _relayChan = new BroadcastChannel('gopang-wallet-sso-relay');
+        _relayChan.onmessage = async (ev) => {
+          const result = await _handleSignRequest(ev.data);
+          if (!result) return;
+          _relayChan.postMessage({ type: 'GOPANG_SIGN_RESPONSE', requestId: ev.data.requestId, ...result });
+        };
+      } catch (e) {
+        // BroadcastChannel 미지원 브라우저 — 조용히 무시(주력 경로는 그대로 동작)
+      }
     } catch(e) {
       console.error('[GopangWallet] 초기화 실패:', e.message);
       global.gopangWallet = null;
