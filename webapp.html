@@ -10,7 +10,13 @@
 <meta name="description" content="K-Traffic 안내 AI와 대화를 통해 교통 민원 유형을 파악하고 담당 기관·절차를 안내합니다.">
 
 <!-- ── 고팡 공통 인증 (subsystem-auth) ── -->
-<script type="module" src="https://hondi.net/auth/subsystem-auth.js"></script>
+<!-- K-서비스 공용 전화번호 인증 모듈(2026-09-07 부착) — 구 고팡 지갑 SSO
+     (subsystem-auth.js, 크로스 도메인 릴레이 버그로 고장난 상태였음)는
+     전수 폐기 — 이 공용 모듈 단독 체제로 전환됨. -->
+<script>
+window.K_AUTH_CONFIG = { serviceLabel: 'K-Traffic' };
+</script>
+<script src="https://hondi.net/auth/k-service-auth-client.js"></script>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
