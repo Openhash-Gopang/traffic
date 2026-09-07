@@ -460,6 +460,12 @@ async function _pumpSSE(response, handleJson) {
 }
 
 function _govGuid() { return k_trafficUser?.ipv6 || GWP_TOKEN || 'anonymous'; }
+// 2026-09-07 신설 — GWP_TOKEN도 없이(북마크·직접 접속 등) 들어온 세션은
+// guid가 'anonymous'로 새서 과금·PDV 기록이 조용히 우회됐다. 지갑도
+// GWP_TOKEN도 없을 때, KAuth(k-service-auth-client.js) 로그인이 돼
+// 있으면 phone_verify_token을 함께 보내 서버(handleGovRelay)가 직접
+// guid를 도출하게 한다 — regional-gov.html과 동일 패턴.
+function _govPhoneToken() { return (!k_trafficUser?.ipv6 && !GWP_TOKEN && window.KAuth && KAuth.hasValidLogin()) ? KAuth.getToken() : null; }
 
 // BYOK 경로에서는 서버(/gov/relay)가 하던 "K-Traffic 공통 규칙 자동 삽입"을
 // 클라이언트가 대신 해야 한다 — /llm/relay는 메시지를 그대로 통과시키기
@@ -502,6 +508,7 @@ async function _govCallRaw(messages, opts = {}) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       guid: _govGuid(), agency: AGENCY_ID, agencyPrompt: AGENCY_PROMPT,
+      phone_verify_token: _govPhoneToken(),
       messages, max_tokens: maxTokens, stream, tier: GOV_TIER,
       // ★ 2026-07-30 — 서버(handleGovRelay)가 위치·날짜를 강제 주입하도록
       // 원본 위치값을 함께 보낸다.
